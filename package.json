@@ -1,0 +1,26 @@
+{
+  "name": "offline",
+  "version": "1.0.0",
+  "description": "Test repository for production project",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon server/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ranmizu/offline.git"
+  },
+  "author": "Brandon, Masha, Joe",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ranmizu/offline/issues"
+  },
+  "homepage": "https://github.com/ranmizu/offline#readme",
+  "devDependencies": {
+    "nodemon": "^1.9.2"
+  },
+  "dependencies": {
+    "express": "^4.13.4"
+  }
+}
