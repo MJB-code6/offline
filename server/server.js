@@ -2,22 +2,16 @@ const express = require('express');
 const app = express();
 const path = require('path');
 const fs = require('fs');
+const bodyParser = require('body-parser');
+const messageController = require('./messages/messageController');
 
-var htmlFile;
+app.use(bodyParser.json());
 
-fs.readFile(path.join(__dirname, '../client/index.html'), function(err, data) {
-  if (err) throw err;
-  htmlFile = data;
-  // var stringFile = htmlFile.toString();
-  // var hrefs = stringFile.match(/<[^>]+href=('.+')/g);
-  // hrefs.forEach(function(href) {
-  //   console.log(href.split('href=')[1]);
-  // });
-  // var srcs = stringFile.match(/<[^>]+src=('.+')/g);
-  // srcs.forEach(function(src) {
-  //   console.log(src.split('src=')[1]);
-  // });
-});
+app.use(express.static(path.join(__dirname, '../client')));
+
+app.get('/messages', messageController.getMessages);
+
+app.post('/messages', messageController.postMessage);
 
 app.get('/', function(req, res) {
   console.log('index');
@@ -31,7 +25,7 @@ app.get('*.js', function(req, res) {
   res.end(fs.readFileSync(path.join(__dirname, '../client', req.url)));
 });
 
-app.get('*.html|*.png|*.css', function(req, res) {
+app.get('*.html|*.png|*.css|*.mp4', function(req, res) {
   console.log("in server (other)", req.url);
   res.statusCode = 200;
   res.end(fs.readFileSync(path.join(__dirname, '../client', req.url)));
