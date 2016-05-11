@@ -21,6 +21,8 @@
     "nodemon": "^1.9.2"
   },
   "dependencies": {
-    "express": "^4.13.4"
+    "body-parser": "^1.15.1",
+    "express": "^4.13.4",
+    "jquery": "^2.2.3"
   }
 }
