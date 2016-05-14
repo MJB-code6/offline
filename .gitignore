@@ -26,6 +26,12 @@ build/Release
 # Dependency directory
 node_modules
 
+# Large assets
+client/assets/vid1.mp4
+client/assets/vid2.mp4
+client/assets/vid3.mp4
+client/assets/vid4.mp4
+
 # Optional npm cache directory
 .npm
 
