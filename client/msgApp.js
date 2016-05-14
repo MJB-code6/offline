@@ -25,8 +25,47 @@ function renderMessages(messages) {
   $('#messageBoard').append($messages);
 }
 
-function sendMessage() {
-  var message = $('#newComment').val();
+function sendMessage(value) {
+  console.log('in sendMessage');
+  console.log('argument:', value);
+  var obj = prepareMessage();
+  mjb.sendOrQueue(function(){
+    $.ajax({
+      type: 'POST',
+      data: JSON.stringify(obj),
+      contentType: 'application/json; charset=UTF-8',
+      url: './messages',
+    }).then(function(data) {
+      getMessage();
+    });
+  });
+}
+
+// var messageQueue = [];
+//
+// function queueMessage() {
+//   console.log('in queueMessage');
+//   var obj = prepareMessage();
+//   messageQueue.push(obj);
+// }
+
+// function sendQueue() {
+//   console.log('in sendQueue');
+//   while (messageQueue.length) {
+//     $.ajax({
+//       type: 'POST',
+//       data: JSON.stringify(messageQueue.shift()),
+//       contentType: 'application/json; charset=UTF-8',
+//       url: './messages',
+//     }).then(function(data) {
+//       getMessage();
+//     });
+//   }
+// }
+
+function prepareMessage() {
+  var message = $('#newComment').val().trim();
+  if (!message) return;
   var author = 'Brandon';
   var obj = {};
   if (message) {
@@ -35,14 +74,5 @@ function sendMessage() {
   if (author) {
     obj.author = author;
   }
-  $.ajax({
-    type: 'POST',
-    data: JSON.stringify(obj),
-    contentType: 'application/json; charset=UTF-8',
-    url: './messages',
-  }).then(function(data) {
-    getMessage();
-    console.log(data);
-  });
-
+  return obj;
 }
