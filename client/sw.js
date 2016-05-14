@@ -15,19 +15,15 @@ var BRANDON_FILES = [];
 self.addEventListener('install', function(event) {
 //  event.waitUntil(
   // // JOE'S CODE
-  //   caches.open(CACHE_JOE)
-  //     .then(function(cache) {
-  //       console.log('[install] Adding to joe cache');
-  //       return cache.addAll(JOE_FILES);
-  //     })
-  // // MASHA'S CODE
+    caches.open(CACHE_JOE)
+      .then(function(cache) {
+        console.log('[install] Adding to joe cache');
+        return cache.addAll(JOE_FILES);
+      })
+  // MASHA'S CODE
+		
+  // BRANDON'S CODE
 
-  // // BRANDON'S CODE
-  //   .then(caches.open(CACHE_BRANDON))
-  //     .then(function(cache) {
-  //       console.log('[install] Adding to brandon cache');
-  //       return cache.addAll(BRANDON_FILES);
-  //     })
   // STANDARD CODE
 //    .then(function() {
 //      console.log('going to skip waiting');
@@ -38,7 +34,15 @@ self.addEventListener('install', function(event) {
 
 self.addEventListener('fetch', function(event) {
   // JOE'S CODE
-
+//  event.respondWith(
+//    caches.match(event.request)
+//    .then(function(response) {
+//      if (response) return response;
+//      return fetch(event.request);
+//    }).catch(function(){
+//      return caches.match(JOE_FILES[JOE_FILES.length - 1]); //responde to no internet
+//    })
+//  )
 
   // MASHA'S CODE
 	// if online, check if asset is in cache, if not fetch from server.
@@ -49,8 +53,7 @@ self.addEventListener('fetch', function(event) {
 				return response || fetch(event.request);
 			}else if(!online) {
 				return response || caches.open(CACHE_MASHA).then(function(cache) {
-					console.log("in cache", cache)
-					console.log('I am offline', cache.match('offline.html') );
+					console.log('I am offline') );
 					return cache.match('offline.html');
 				});
 			}
@@ -84,8 +87,14 @@ self.addEventListener('message', function(event) {
 
 
   // JOE'S CODE
-
-
+	if (event.data.command === "cache") {
+    JOE_FILES = event.data.info;
+    caches.open(CACHE_JOE)
+    .then(function(cache) {
+      return cache.addAll(JOE_FILES);
+    })
+  }
+	
   // MASHA'S CODE	
 	// initially cache the fallback into the cache
 	if(event.data.command === "fallback") {
@@ -114,8 +123,28 @@ self.addEventListener('message', function(event) {
 	 //open cache
 	 // add(event.data.info) }
 
-  // BRANDON'S CODE
 
+  // BRANDON'S CODE
+  if (event.data.command === "offline") {
+    online = event.data.info;
+    console.log("heard offline message. online is now", online);
+  }
+
+  if (event.data.command === "online") {
+    online = event.data.info;
+    console.log("heard online message. online is now", online);
+    console.log(caches);
+  }
+
+  // if (event.data.command === "defer") {
+  //   event.waitUntil(
+  //     caches.open(PENDING_REQUESTS)
+  //     .then(function(cache) {
+  //       console.log('[install] Adding to pending requests cache');
+  //       return cache.addAll(event.data.info);
+  //     })
+  //   );
+  // }
 
   // STANDARD CODE
 
