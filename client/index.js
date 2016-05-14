@@ -94,7 +94,13 @@ console.log("in onsuccess, db", db, event);
 
 
 // JOE'S CODE
-
+mjb.cache = function(fileArray, fallback) {
+  if(fallback) fileArray.push(fallback);
+  var file = {};
+  file.command = "cache";
+  file.info = fileArray;
+  navigator.serviceWorker.controller.postMessage(file);
+}
 
 // MASHA'S CODE
 
@@ -103,30 +109,30 @@ console.log("in onsuccess, db", db, event);
 //  This ultimately needs to be moved to browser storage (indexedDB?)
 // mjb.deferredRequests = mjb.deferredRequests || [];
 
-      // mjb.sendOrQueue = function(deferredFunc) {
-      //   if (navigator.onLine) return deferredFunc();
-      //   var objectStore = db.transaction(["deferredRequests"], "readwrite").objectStore("deferredRequests");
-      //   var request = objectStore.get(window.location.origin);
-      //   request.onerror = function(event) {
-      //     console.log("error:", event);
-      //   };
-      //   request.onsuccess = function(event) {
-      //     // Get the old value that we want to update
-      //     var deferredQueue = request.result["requests"];
-      //
-      //     // update the value(s) in the object that you want to change
-      //     deferredQueue.push(deferredFunc.toString());
-      //
-      //     // Put this updated object back into the database.
-      //     var requestUpdate = objectStore.put(deferredQueue);
-      //      requestUpdate.onerror = function(event) {
-      //        console.log("error:", event);
-      //      };
-      //      requestUpdate.onsuccess = function(event) {
-      //        console.log("successfully updated");
-      //      };
-      //   };
-      // }
+mjb.sendOrQueue = function(deferredFunc) {
+  if (navigator.onLine) return deferredFunc();
+  var objectStore = db.transaction(["deferredRequests"], "readwrite").objectStore("deferredRequests");
+  var request = objectStore.get(window.location.origin);
+  request.onerror = function(event) {
+    console.log("error:", event);
+  };
+  request.onsuccess = function(event) {
+    // Get the old value that we want to update
+    var deferredQueue = request.result["requests"];
+
+    // update the value(s) in the object that you want to change
+    deferredQueue.push(deferredFunc.toString());
+
+    // Put this updated object back into the database.
+    var requestUpdate = objectStore.put(deferredQueue);
+     requestUpdate.onerror = function(event) {
+       console.log("error:", event);
+     };
+     requestUpdate.onsuccess = function(event) {
+       console.log("successfully updated");
+     };
+  };
+}
 
 mjb.emptyQueue = function() {
   while(navigator.onLine && mjb.deferredRequests.length) {
