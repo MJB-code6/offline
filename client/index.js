@@ -60,7 +60,13 @@ window.addEventListener('load', function(event) {
 
 
 // JOE'S CODE
-
+mjb.cache = function(fileArray, fallback) {
+  if(fallback) fileArray.push(fallback);
+  var file = {};
+  file.command = "cache";
+  file.info = fileArray;
+  navigator.serviceWorker.controller.postMessage(file);
+}
 
 // MASHA'S CODE
 
