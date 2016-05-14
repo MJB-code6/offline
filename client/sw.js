@@ -16,13 +16,13 @@ var BRANDON_FILES = [];
 
 
 self.addEventListener('install', function(event) {
-  // event.waitUntil(
+  event.waitUntil(
   // // JOE'S CODE
-    // caches.open(CACHE_JOE)
-    //   .then(function(cache) {
-    //     console.log('[install] Adding to joe cache');
-    //     return cache.addAll(JOE_FILES);
-    //   })
+    caches.open(CACHE_JOE)
+      .then(function(cache) {
+        console.log('[install] Adding to joe cache');
+        return cache.addAll(JOE_FILES);
+      })
   // // MASHA'S CODE
   //   .then(caches.open(CACHE_MASHA))
   //     .then(function(cache) {
@@ -33,16 +33,24 @@ self.addEventListener('install', function(event) {
     //.then(
 
   // STANDARD CODE
-    // .then(function() {
-    //   console.log('going to skip waiting');
+    .then(function() {
+      console.log('going to skip waiting');
       return self.skipWaiting();
-  //   })
-  // );
+    })
+  );
 });
 
 self.addEventListener('fetch', function(event) {
   // JOE'S CODE
-
+  event.respondWith(
+    caches.match(event.request)
+    .then(function(response) {
+      if (response) return response;
+      return fetch(event.request);
+    }).catch(function(){
+      return caches.match(JOE_FILES[JOE_FILES.length - 1]); //responde to no internet
+    })
+  )
 
   // MASHA'S CODE
 
@@ -74,19 +82,24 @@ self.addEventListener('message', function(event) {
 
 
   // JOE'S CODE
-
-
+  if (event.data.command === "cache") {
+    JOE_FILES = event.data.info;
+    caches.open(CACHE_JOE)
+    .then(function(cache) {
+      return cache.addAll(JOE_FILES);
+    })
+  }
   // MASHA'S CODE
 
 
   // BRANDON'S CODE
-  event.waitUntil(
-    caches.open(PENDING_REQUESTS)
-    .then(function(cache) {
-      console.log('[install] Adding to pending requests cache');
-      return cache.addAll(BRANDON_FILES);
-    })
-  );
+  // event.waitUntil(
+  //   caches.open(PENDING_REQUESTS)
+  //   .then(function(cache) {
+  //     console.log('[install] Adding to pending requests cache');
+  //     return cache.addAll(BRANDON_FILES);
+  //   })
+  // );
   // STANDARD CODE
 
 });
