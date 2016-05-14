@@ -16,31 +16,28 @@ var BRANDON_FILES = [];
 
 
 self.addEventListener('install', function(event) {
-  event.waitUntil(
+  // event.waitUntil(
   // // JOE'S CODE
-  //   caches.open(CACHE_JOE)
-  //     .then(function(cache) {
-  //       console.log('[install] Adding to joe cache');
-  //       return cache.addAll(JOE_FILES);
-  //     })
+    // caches.open(CACHE_JOE)
+    //   .then(function(cache) {
+    //     console.log('[install] Adding to joe cache');
+    //     return cache.addAll(JOE_FILES);
+    //   })
   // // MASHA'S CODE
   //   .then(caches.open(CACHE_MASHA))
   //     .then(function(cache) {
   //       console.log('[install] Adding to masha cache');
   //       return cache.addAll(MASHA_FILES);
   //     })
-  // // BRANDON'S CODE
-  //   .then(caches.open(CACHE_BRANDON))
-  //     .then(function(cache) {
-  //       console.log('[install] Adding to brandon cache');
-  //       return cache.addAll(BRANDON_FILES);
-  //     })
+  // BRANDON'S CODE
+    //.then(
+
   // STANDARD CODE
-    .then(function() {
-      console.log('going to skip waiting');
+    // .then(function() {
+    //   console.log('going to skip waiting');
       return self.skipWaiting();
-    })
-  );
+  //   })
+  // );
 });
 
 self.addEventListener('fetch', function(event) {
@@ -83,8 +80,13 @@ self.addEventListener('message', function(event) {
 
 
   // BRANDON'S CODE
-
-
+  event.waitUntil(
+    caches.open(PENDING_REQUESTS)
+    .then(function(cache) {
+      console.log('[install] Adding to pending requests cache');
+      return cache.addAll(BRANDON_FILES);
+    })
+  );
   // STANDARD CODE
 
 });
