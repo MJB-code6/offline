@@ -18,7 +18,9 @@ window.addEventListener('online', function(event) {
 
 
   // BRANDON'S CODE
-  // sendQueue();
+  // mjb.emptyQueue();
+
+  }
 
   // STANDARD CODE
 
@@ -65,5 +67,9 @@ window.addEventListener('load', function(event) {
 
 // BRANDON'S CODE
 
+
+// mjb.emptyQueue = function() {
+
+}
 
 // STANDARD CODE

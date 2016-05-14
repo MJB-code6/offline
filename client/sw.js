@@ -17,12 +17,12 @@ var BRANDON_FILES = [];
 
 self.addEventListener('install', function(event) {
   event.waitUntil(
-  // JOE'S CODE
-    caches.open(CACHE_JOE)
-      .then(function(cache) {
-        console.log('[install] Adding to joe cache');
-        return cache.addAll(JOE_FILES);
-      })
+  // // JOE'S CODE
+  //   caches.open(CACHE_JOE)
+  //     .then(function(cache) {
+  //       console.log('[install] Adding to joe cache');
+  //       return cache.addAll(JOE_FILES);
+  //     })
   // // MASHA'S CODE
   //   .then(caches.open(CACHE_MASHA))
   //     .then(function(cache) {
