@@ -2,13 +2,13 @@ if (!navigator.serviceWorker.controller) {
   navigator.serviceWorker.register('sw.js', {
     scope: '.'
   }).then(function(registration) {
-    console.log("navigator.serviceWorker.controller", navigator.serviceWorker.controller);
     console.log('The service worker has been registered ', registration);
   });
 }
 
 // BRANDON'S CODE
 var db;
+
 window.mjb = window.mjb || {};
 
 window.addEventListener('online', function(event) {
@@ -18,8 +18,7 @@ window.addEventListener('online', function(event) {
 
 
   // MASHA'S CODE
-
-
+	navigator.serviceWorker.controller.postMessage({command: "online", info: true});	
   // BRANDON'S CODE
   // caches.open('PENDING_REQUESTS')
   // .then(function(cache) {
@@ -28,7 +27,6 @@ window.addEventListener('online', function(event) {
   // });
   navigator.serviceWorker.controller.postMessage({command: "online", info: true});
   mjb.emptyQueue();
-
 
   // STANDARD CODE
 
@@ -41,15 +39,13 @@ window.addEventListener('offline', function(event) {
 
 
   // MASHA'S CODE
-
-
+	navigator.serviceWorker.controller.postMessage({command: "online", info: false});
   // BRANDON'S CODE
   navigator.serviceWorker.controller.postMessage({command: "online", info: false});
 
   // STANDARD CODE
 
 });
-
 window.addEventListener('load', function(event) {
   console.log('Heard "load"');
 
@@ -57,8 +53,7 @@ window.addEventListener('load', function(event) {
 
 
   // MASHA'S CODE
-
-
+//window.postMessage('test-message!!', '/');
   // BRANDON'S CODE
   const dbName = "MJB_DEFERRED";
 
@@ -103,7 +98,47 @@ mjb.cache = function(fileArray, fallback) {
 }
 
 // MASHA'S CODE
+// cache the fallback page first
 
+mjb.fallback = function(fallbackPage) {	
+	if (!navigator.serviceWorker.controller) {
+		console.log("no sw");
+		navigator.serviceWorker.register('sw.js', {
+			scope: '.'
+		}).then(function(registration) {
+			var serviceWorker;
+			if (registration.installing) {
+				serviceWorker = registration.installing || registration.waiting || registration.active
+			}
+
+			if (serviceWorker) {
+				console.log(serviceWorker.state);
+				serviceWorker.addEventListener('statechange', function(event) {
+					console.log(event.target.state);
+					if(this.state === 'activated') {
+						console.log("ok sw");
+						return navigator.serviceWorker.controller.postMessage({command: 'fallback', info: fallbackPage});
+					}
+				});
+			}
+		});
+	}else {
+		console.log("yes sw")
+		return navigator.serviceWorker.controller.postMessage({command: 'fallback', info: fallbackPage});
+	}
+	
+//	if(!navigator.serviceWorker.controller) {
+//		console.log("no sw");
+//		self.addEventListener('statechange', function() {
+//			if(this.state === 'activated') {
+//				console.log("ok sw");
+//				return navigator.serviceWorker.controller.postMessage({command: 'fallback', info: fallbackPage});
+//			}
+//		});
+//	}
+}
+
+mjb.fallback("/offline.html");
 
 // BRANDON'S CODE
 //  This ultimately needs to be moved to browser storage (indexedDB?)
@@ -133,6 +168,7 @@ mjb.sendOrQueue = function(deferredFunc) {
      };
   };
 }
+
 
 mjb.emptyQueue = function() {
   while(navigator.onLine && mjb.deferredRequests.length) {

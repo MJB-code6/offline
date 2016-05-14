@@ -4,56 +4,61 @@ const CACHE_JOE = 'joe';
 const CACHE_MASHA = 'masha';
 const CACHE_BRANDON = 'brandon';
 
-var online; // Boolean
+var online = true; // Boolean
 
 var JOE_FILES = [];
 
-
 var MASHA_FILES = [];
-
 
 var BRANDON_FILES = [];
 
-
 self.addEventListener('install', function(event) {
-  event.waitUntil(
+//  event.waitUntil(
   // // JOE'S CODE
     caches.open(CACHE_JOE)
       .then(function(cache) {
         console.log('[install] Adding to joe cache');
         return cache.addAll(JOE_FILES);
       })
-  // // MASHA'S CODE
-  //   .then(caches.open(CACHE_MASHA))
-  //     .then(function(cache) {
-  //       console.log('[install] Adding to masha cache');
-  //       return cache.addAll(MASHA_FILES);
-  //     })
+  // MASHA'S CODE
+		
   // BRANDON'S CODE
-    //.then(
 
   // STANDARD CODE
-    .then(function() {
-      console.log('going to skip waiting');
+//    .then(function() {
+//      console.log('going to skip waiting');
       return self.skipWaiting();
-    })
-  );
+//    })
+//  );
 });
 
 self.addEventListener('fetch', function(event) {
   // JOE'S CODE
-  event.respondWith(
-    caches.match(event.request)
-    .then(function(response) {
-      if (response) return response;
-      return fetch(event.request);
-    }).catch(function(){
-      return caches.match(JOE_FILES[JOE_FILES.length - 1]); //responde to no internet
-    })
-  )
+//  event.respondWith(
+//    caches.match(event.request)
+//    .then(function(response) {
+//      if (response) return response;
+//      return fetch(event.request);
+//    }).catch(function(){
+//      return caches.match(JOE_FILES[JOE_FILES.length - 1]); //responde to no internet
+//    })
+//  )
 
   // MASHA'S CODE
-
+	// if online, check if asset is in cache, if not fetch from server.
+	// if offline, check if it's in the cache, if not show fallback page.
+	event.respondWith(
+		caches.match(event.request).then(function(response) {
+			if(online) {
+				return response || fetch(event.request);
+			}else if(!online) {
+				return response || caches.open(CACHE_MASHA).then(function(cache) {
+					console.log('I am offline') );
+					return cache.match('offline.html');
+				});
+			}
+		})
+	);
 
   // BRANDON'S CODE
 
@@ -82,14 +87,41 @@ self.addEventListener('message', function(event) {
 
 
   // JOE'S CODE
-  if (event.data.command === "cache") {
+	if (event.data.command === "cache") {
     JOE_FILES = event.data.info;
     caches.open(CACHE_JOE)
     .then(function(cache) {
       return cache.addAll(JOE_FILES);
     })
   }
-  // MASHA'S CODE
+	
+  // MASHA'S CODE	
+	// initially cache the fallback into the cache
+	if(event.data.command === "fallback") {
+		caches.open(CACHE_MASHA)
+	 		.then(function(cache) {
+		 		return cache.add(event.data.info);
+	 		})
+	}
+	
+	if (event.data.command === "offline") {
+   online = event.data.info;
+   console.log("heard offline message. online is now", online);
+ 	}
+
+	if (event.data.command === "online") {
+	 online = event.data.info;
+	 console.log("heard online message. online is now", online);
+	 console.log(caches);
+	}
+//	console.log(event.data.command, event.data.info);
+//	console.log("the message event", event);
+
+// first cache the fallback page, second listen for messages and if offline/online serve etc. for example if offline, check if asset they are asking is in cache first. if not, render offline page)
+	// check if coming from the right page
+	// if(event.data.command === "fallback") {
+	 //open cache
+	 // add(event.data.info) }
 
 
   // BRANDON'S CODE
