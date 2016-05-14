@@ -2,6 +2,7 @@ if (!navigator.serviceWorker.controller) {
   navigator.serviceWorker.register('sw.js', {
     scope: '.'
   }).then(function(registration) {
+    console.log("navigator.serviceWorker", navigator.serviceWorker);
     console.log('The service worker has been registered ', registration);
   });
 }
@@ -18,9 +19,8 @@ window.addEventListener('online', function(event) {
 
 
   // BRANDON'S CODE
-  // mjb.emptyQueue();
+  mjb.emptyQueue();
 
-  }
 
   // STANDARD CODE
 
@@ -68,7 +68,7 @@ window.addEventListener('load', function(event) {
 // BRANDON'S CODE
 
 
-// mjb.emptyQueue = function() {
+mjb.emptyQueue = function() {
 
 }
 
