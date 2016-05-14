@@ -93,13 +93,27 @@ self.addEventListener('message', function(event) {
 
 
   // BRANDON'S CODE
-  // event.waitUntil(
-  //   caches.open(PENDING_REQUESTS)
-  //   .then(function(cache) {
-  //     console.log('[install] Adding to pending requests cache');
-  //     return cache.addAll(BRANDON_FILES);
-  //   })
-  // );
+  if (event.data.command === "offline") {
+    online = event.data.info;
+    console.log("heard offline message. online is now", online);
+  }
+
+  if (event.data.command === "online") {
+    online = event.data.info;
+    console.log("heard online message. online is now", online);
+    console.log(caches);
+  }
+
+  // if (event.data.command === "defer") {
+  //   event.waitUntil(
+  //     caches.open(PENDING_REQUESTS)
+  //     .then(function(cache) {
+  //       console.log('[install] Adding to pending requests cache');
+  //       return cache.addAll(event.data.info);
+  //     })
+  //   );
+  // }
+
   // STANDARD CODE
 
 });

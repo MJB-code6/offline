@@ -17,5 +17,3 @@ module.exports = {
     res.end(JSON.stringify(messages));
   }
 };
-
-console.log('Messages received:', messages);
