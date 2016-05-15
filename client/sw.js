@@ -1,168 +1,120 @@
 console.log('sw.js started');
 
-const CACHE_JOE = 'joe';
-const CACHE_MASHA = 'masha';
-const CACHE_BRANDON = 'brandon';
+const CACHE_FIRST = 'precache';
+const FALLBACK_CACHE = 'fallback';
 
-var online = true; // Boolean
+var online = true;
 
-var JOE_FILES = [];
-
-var MASHA_FILES = [];
-
-var BRANDON_FILES = [];
+var cacheFirstAssets = [];
 
 self.addEventListener('install', function(event) {
-//  event.waitUntil(
-  // // JOE'S CODE
-    caches.open(CACHE_JOE)
+  event.waitUntil(
+    caches.open(CACHE_FIRST)
       .then(function(cache) {
-        console.log('[install] Adding to joe cache');
-        return cache.addAll(JOE_FILES);
+        console.log('[install] Adding to precache cache');
+        return cache.addAll(cacheFirstAssets);
       })
-  // MASHA'S CODE
-		
-  // BRANDON'S CODE
+      .then(function() {
+        return self.skipWaiting();
+      })
+  );
+});
 
-  // STANDARD CODE
-//    .then(function() {
-//      console.log('going to skip waiting');
-      return self.skipWaiting();
-//    })
-//  );
+self.addEventListener('activate', function(event) {
+  console.log('[activate]');
+  console.log("idb", indexedDB.open);
+  event.waitUntil(self.clients.claim());
 });
 
 self.addEventListener('fetch', function(event) {
-  // JOE'S CODE
-//  event.respondWith(
-//    caches.match(event.request)
-//    .then(function(response) {
-//      if (response) return response;
-//      return fetch(event.request);
-//    }).catch(function(){
-//      return caches.match(JOE_FILES[JOE_FILES.length - 1]); //responde to no internet
-//    })
-//  )
-
-  // MASHA'S CODE
-	// if online, check if asset is in cache, if not fetch from server.
-	// if offline, check if it's in the cache, if not show fallback page.
-	event.respondWith(
-		caches.match(event.request).then(function(response) {
-			if(online) {
-				return response || fetch(event.request);
-			}else if(!online) {
-				return response || caches.open(CACHE_MASHA).then(function(cache) {
-					console.log('I am offline') );
-					return cache.match('offline.html');
-				});
-			}
-		})
-	);
-
-  // BRANDON'S CODE
-
-
-  // STANDARD CODE
-
-//   event.respondWith(
-//     caches.match(event.request)
-//       .then(function(response) {
-//         if (response) {
-//           console.log(
-//             '[fetch] Returning from ServiceWorker cache: ',
-//             event.request.url
-//           );
-//           return response;
-//         }
-//         console.log('[fetch] Returning from server: ', event.request.url);
-//         return fetch(event.request);
-//       }
-//     )
-//   );
+ event.respondWith(
+   caches.match(event.request)
+   .then(function(response) {
+     return response || fetch(event.request);
+   }).catch(function(event){
+     console.log(event);
+    //  return caches.match(cacheFirstAssets[cacheFirstAssets.length - 1]);
+   })
+ )
 });
 
 self.addEventListener('message', function(event) {
-  // ONLINE OFFLINE MESSAGE
+  console.log('in message', event.data);
 
-
-  // JOE'S CODE
 	if (event.data.command === "cache") {
-    JOE_FILES = event.data.info;
-    caches.open(CACHE_JOE)
+    cacheFirstAssets = event.data.info;
+    caches.open(CACHE_FIRST)
     .then(function(cache) {
-      return cache.addAll(JOE_FILES);
+      return cache.addAll(cacheFirstAssets);
     })
   }
-	
-  // MASHA'S CODE	
-	// initially cache the fallback into the cache
+
 	if(event.data.command === "fallback") {
-		caches.open(CACHE_MASHA)
+		caches.open(FALLBACK_CACHE)
 	 		.then(function(cache) {
 		 		return cache.add(event.data.info);
 	 		})
 	}
-	
-	if (event.data.command === "offline") {
-   online = event.data.info;
-   console.log("heard offline message. online is now", online);
- 	}
-
-	if (event.data.command === "online") {
-	 online = event.data.info;
-	 console.log("heard online message. online is now", online);
-	 console.log(caches);
-	}
-//	console.log(event.data.command, event.data.info);
-//	console.log("the message event", event);
-
-// first cache the fallback page, second listen for messages and if offline/online serve etc. for example if offline, check if asset they are asking is in cache first. if not, render offline page)
-	// check if coming from the right page
-	// if(event.data.command === "fallback") {
-	 //open cache
-	 // add(event.data.info) }
-
-
-  // BRANDON'S CODE
-  if (event.data.command === "offline") {
-    online = event.data.info;
-    console.log("heard offline message. online is now", online);
-  }
 
   if (event.data.command === "online") {
     online = event.data.info;
     console.log("heard online message. online is now", online);
-    console.log(caches);
   }
 
-  // if (event.data.command === "defer") {
-  //   event.waitUntil(
-  //     caches.open(PENDING_REQUESTS)
-  //     .then(function(cache) {
-  //       console.log('[install] Adding to pending requests cache');
-  //       return cache.addAll(event.data.info);
-  //     })
-  //   );
-  // }
+  if (event.data.command === "db") {
 
-  // STANDARD CODE
+  }
 
-});
+  if (event.data.command === "defer") {
+    var objectStore = db.transaction(["deferredRequests"], "readwrite").objectStore("deferredRequests");
+    var request = objectStore.get(window.location.origin);
+    request.onerror = function(event) {
+      console.log("error:", event);
+    };
+    request.onsuccess = function(event) {
+      // Get the old value that we want to update
+      var deferredQueue = request.result["requests"];
+
+      // update the value(s) in the object that you want to change
+      deferredQueue.push({data: dataObj, callback: '(' + deferredFunc.toString() + ')'});
+
+      // Put this updated object back into the database.
+      var requestUpdate = objectStore.put({domain: window.location.origin, requests: deferredQueue});
+       requestUpdate.onerror = function(event) {
+         console.log("error:", event);
+       };
+       requestUpdate.onsuccess = function(event) {
+         console.log("successfully updated", event);
+       };
+    };
+  }
+
+  if (event.data.command === "empty") {
+    var objectStore = db.transaction(["deferredRequests"], "readwrite").objectStore("deferredRequests");
+    var request = objectStore.get(window.location.origin);
+
+    request.onerror = function(event) {
+      console.log("error:", event);
+    };
+
+    request.onsuccess = function(event) {
+      var deferredQueue = request.result["requests"];
+      while(navigator.onLine && deferredQueue.length) {
+        var nextRequest = deferredQueue.shift();
+        var deferredFunc = eval(nextRequest.callback);
+        if (typeof(deferredFunc) === "function") deferredFunc(nextRequest.data);
+        var requestUpdate = objectStore.put({domain: window.location.origin, requests: deferredQueue});
+         requestUpdate.onerror = function(event) {
+           console.log("error:", event);
+         };
+         requestUpdate.onsuccess = function(event) {
+           console.log("successfully updated", event);
+         };
+      }
+      console.log("finished processing queue");
+    }
+
+  }
 
 
-self.addEventListener('activate', function(event) {
-
-  // JOE'S CODE
-
-
-  // MASHA'S CODE
-
-
-  // BRANDON'S CODE
-
-
-  // STANDARD CODE
-  console.log('[activate]');
-  event.waitUntil(self.clients.claim());
 });

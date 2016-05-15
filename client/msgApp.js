@@ -29,7 +29,7 @@ function sendMessage(value) {
   console.log('in sendMessage');
   console.log('argument:', value);
   var obj = prepareMessage();
-  mjb.sendOrQueue(function(){
+  mjb.sendOrQueue(obj, function(obj){
     $.ajax({
       type: 'POST',
       data: JSON.stringify(obj),
