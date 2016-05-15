@@ -12,11 +12,6 @@ app.use(express.static(path.join(__dirname, '../client')));
 app.get('/messages', messageController.getMessages);
 
 app.post('/messages', messageController.postMessage);
-//
-// app.post('/button', function(req, res) {
-//   res.writeHead(200, {'Content-Type': 'text/html'});
-//   res.end("hello");
-// });
 
 app.get('*', function(req, res) {
   console.log('caught:', req.url);
