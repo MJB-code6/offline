@@ -53,6 +53,7 @@ Utilizing the power of Service Workers, we've created a library that simplifies 
 	      var msgObj = {};
 	      msgObj.message = msg;
 	      msgObj.author = user;
+				
 	      mjb.sendOrQueue(function() {
 		    $.ajax({
 		      type: POST,
