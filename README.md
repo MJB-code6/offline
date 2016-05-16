@@ -24,8 +24,8 @@ Utilizing the power of Service Workers, we've created a library that simplifies 
 ## mjb.cache([*files*], *fallback(optional)*)
 
 #####Benefits:
-1. choose what you want to cache
-2. improve your app's performance.
+1. Choose what you want to cache
+2. Improve your app's performance.
 3. Better user experience--users unlikely to notice your app is offline.  
 4. (*optional*) Include a fallback page when user is offline. Useful if the asset they are requesting is not available in the cache.
    
