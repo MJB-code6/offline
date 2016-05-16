@@ -1,4 +1,4 @@
-# MJB Offline
+# SkyPort
 > Simple setup. Offline-first. Customizable.
 
 #####Have you ever wanted users to experience your web app even when the internet fails them? 
@@ -11,7 +11,7 @@ Setup is long and tedious and understanding the Service Worker lifestyle can be 
 
 Utilizing the power of Service Workers, we've created a library that simplifies setup, and provides developers flexibility and customization of their offline-first user experience.
 
-### Why MJB offline?  
+### Why SkyPort offline?  
 
 * Focus more on development and less on inessential configuration.
 * Create an offline-first user experience for your web apps.
@@ -21,7 +21,7 @@ Utilizing the power of Service Workers, we've created a library that simplifies 
 
 
 
-## mjb.cache([*files*], *fallback(optional)*)
+## skyport.cache([*files*], *fallback(optional)*)
 
 #####Benefits:
 1. Choose what you want to cache
@@ -29,7 +29,7 @@ Utilizing the power of Service Workers, we've created a library that simplifies 
 3. Better user experience--users unlikely to notice your app is offline.  
 4. (*optional*) Include a fallback page when user is offline. Useful if the asset they are requesting is not available in the cache.
    
-        mjb.cache([
+        skyport.cache([
           '/index.html',
 		  '/messages.html',
 		  '/another-page.html',
@@ -39,7 +39,7 @@ Utilizing the power of Service Workers, we've created a library that simplifies 
 		  '/assets/some-video.mp4'
            ], '/fallback-page.html');
 
-## mjb.sendOrQueue(*fn*)
+## skyport.sendOrQueue(*fn*)
 
 #####Benefits:
 
@@ -54,7 +54,7 @@ Utilizing the power of Service Workers, we've created a library that simplifies 
 	      msgObj.message = msg;
 	      msgObj.author = user;
 				
-	      mjb.sendOrQueue(function() {
+	      skyport.sendOrQueue(function() {
 		    $.ajax({
 		      type: POST,
               url: '/messages',
@@ -67,10 +67,10 @@ Utilizing the power of Service Workers, we've created a library that simplifies 
 	      });
         };
 
-##mjb.fallback(*fallback*);
+## skyport.fallback(*fallback*);
 
 #####Benefits:
 1. Easy setup, one line of code.
 2. Create a simple fallback page for users to see when your web app is offline.
  
-        mjb.fallback('/fallbackPage.html');
+        skyport.fallback('/fallbackPage.html');
