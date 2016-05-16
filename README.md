@@ -15,8 +15,8 @@ Utilizing the power of Service Workers, we've created a library that simplifies 
 
 * Focus more on development and less on inessential configuration.
 * Create an offline-first user experience for your web apps.
-* Improves web performance and reduces requests to network.
-* Determine whether to serve files from a cache, server, or fallback page, depending on if the user is online or offline.
+* Improves web performance by reducing network requests.
+* Determine whether to serve files from a cache, server, or fallback page, depending on if user is online or offline.
 * Defer functions/requests if user goes offline, only to be successfully synced once they are online again.
 
 

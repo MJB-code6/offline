@@ -1,179 +1,208 @@
-if (!navigator.serviceWorker.controller) {
-  navigator.serviceWorker.register('sw.js', {
-    scope: '.'
-  }).then(function(registration) {
-    console.log('The service worker has been registered ', registration);
+(function() {
+  console.log('start of index.js, this is', this);
+  if (!navigator.serviceWorker) return;
+
+  var db;
+  var serviceWorker = navigator.serviceWorker.controller;
+  console.log("nscontroller", navigator.serviceWorker.controller);
+  if (!serviceWorker) {
+    navigator.serviceWorker.register('/sw.js', {
+      scope: '.'
+    }).then(function(registration) {
+      console.log('The service worker has been registered ', registration);
+      serviceWorker = registration.active || registration.waiting || registration.installing;
+      serviceWorker.onmessage = function(event) {
+        console.log("I got a message from the sw:", event.data);
+      }
+      mjb.cache(['/index.js']);
+      sendToSW({command: 'createDB', info: window.location.origin});
+    });
+  }
+
+  window.mjb =  window.mjb || {
+
+    cache: function(assetArray, fallback) {
+      if (fallback) assetArray.push(fallback);
+      sendToSW({
+        command: 'cache',
+        info: assetArray
+      });
+    },
+
+    fallback: function(fallbackPage) {
+    	sendToSW({
+        command: 'fallback',
+        info: fallbackPage
+      });
+    },
+
+    sendOrQueue: function(dataObj, deferredFunc) {
+      if (navigator.onLine) return deferredFunc(dataObj);
+      if (typeof(deferredFunc) !== "function") return;
+      sendToSW({
+        command: 'queue',
+        info: {
+          domain: window.location.origin,
+          dataObj: JSON.stringify(dataObj),
+          deferredFunc: '(' + deferredFunc.toString() + ')'
+        }
+      });
+      // var objectStore = db.transaction(["deferredRequests"], "readwrite").objectStore("deferredRequests");
+      // var request = objectStore.get(window.location.origin);
+      // request.onerror = function(event) {
+      //   console.log("error:", event);
+      // };
+      // request.onsuccess = function(event) {
+      //   // Get the old value that we want to update
+      //   var deferredQueue = request.result["requests"];
+      //
+      //   // update the value(s) in the object that you want to change
+      //   deferredQueue.push({data: dataObj, callback: '(' + deferredFunc.toString() + ')'});
+      //
+      //   // Put this updated object back into the database.
+      //   var requestUpdate = objectStore.put({domain: window.location.origin, requests: deferredQueue});
+      //    requestUpdate.onerror = function(event) {
+      //      console.log("error:", event);
+      //    };
+      //    requestUpdate.onsuccess = function(event) {
+      //      console.log("successfully updated", event);
+      //    };
+      // };
+    }
+  };
+
+  window.addEventListener('online', function(event) {
+    console.log("heard 'online'");
+    sendToSW({command: "online", info: true});
+    emptyQueue();
+    // sendToSW({command: "empty", info: window.location.origin});
   });
-}
 
-// BRANDON'S CODE
-var db;
+  window.addEventListener('offline', function(event) {
+    console.log("heard 'offline'");
+    sendToSW({command: "online", info: false});
+  });
 
-window.mjb = window.mjb || {};
+  window.addEventListener('load', function(event) {
+    console.log("heard 'load'");
+  });
 
-window.addEventListener('online', function(event) {
-  console.log('Heard "online"');
-
-  // JOE'S CODE
-
-
-  // MASHA'S CODE
-	navigator.serviceWorker.controller.postMessage({command: "online", info: true});	
-  // BRANDON'S CODE
-  // caches.open('PENDING_REQUESTS')
-  // .then(function(cache) {
-  //   cache.addAll(['/assets/lion.png']);
-  //   console.log('[install] Adding to pending requests cache');
-  // });
-  navigator.serviceWorker.controller.postMessage({command: "online", info: true});
-  mjb.emptyQueue();
-
-  // STANDARD CODE
-
-});
-
-window.addEventListener('offline', function(event) {
-  console.log('Heard "offline"');
-
-  // JOE'S CODE
-
-
-  // MASHA'S CODE
-	navigator.serviceWorker.controller.postMessage({command: "online", info: false});
-  // BRANDON'S CODE
-  navigator.serviceWorker.controller.postMessage({command: "online", info: false});
-
-  // STANDARD CODE
-
-});
-window.addEventListener('load', function(event) {
-  console.log('Heard "load"');
-
-  // JOE'S CODE
-
-
+<<<<<<< HEAD
   // MASHA'S CODE
 	
   // BRANDON'S CODE
   const dbName = "MJB_DEFERRED";
+=======
+  // mjb.cache = function(assetArray, fallback) {
+  //   if (fallback) assetArray.push(fallback);
+  //   sendToSW({command: 'cache', info: assetArray});
+  // }
+  //
+  // mjb.fallback = function(fallbackPage) {
+  // 	sendToSW({command: 'fallback', info: fallbackPage});
+  // }
+  //
+  // mjb.sendOrQueue = function(dataObj, deferredFunc) {
+  //   if (navigator.onLine) return deferredFunc(dataObj);
+  //
+  //   if (typeof(deferredFunc) !== "function") return;
+  //
+  //
+  //   // var objectStore = db.transaction(["deferredRequests"], "readwrite").objectStore("deferredRequests");
+  //   // var request = objectStore.get(window.location.origin);
+  //   // request.onerror = function(event) {
+  //   //   console.log("error:", event);
+  //   // };
+  //   // request.onsuccess = function(event) {
+  //   //   // Get the old value that we want to update
+  //   //   var deferredQueue = request.result["requests"];
+  //   //
+  //   //   // update the value(s) in the object that you want to change
+  //   //   deferredQueue.push({data: dataObj, callback: '(' + deferredFunc.toString() + ')'});
+  //   //
+  //   //   // Put this updated object back into the database.
+  //   //   var requestUpdate = objectStore.put({domain: window.location.origin, requests: deferredQueue});
+  //   //    requestUpdate.onerror = function(event) {
+  //   //      console.log("error:", event);
+  //   //    };
+  //   //    requestUpdate.onsuccess = function(event) {
+  //   //      console.log("successfully updated", event);
+  //   //    };
+  //   // };
+  // }
 
-  var request = indexedDB.open(dbName, 1);
+  function emptyQueue() {
+    var openRequest = indexedDB.open('DEFERRED', 1);
 
-  request.onerror = function(event) {
-    console.error("Error:", event);
-  };
+    openRequest.onsuccess = function(e) {
+      var db = e.target.result;
+      var objectStore = db.transaction(["deferredRequests"], "readwrite").objectStore("deferredRequests");
+      var request = objectStore.get(window.location.origin);
 
-  request.onupgradeneeded = function(event) {
-    db = event.target.result;
-console.log("in onupgradeneeded, db", db, event);
-    var objectStore = db.createObjectStore("deferredRequests", { keyPath: "domain" });
-    // // objectStore.createIndex("requests", "requests", { unique: false });
-    // objectStore.transaction.oncomplete = function(event) {
+      request.onerror = function(event) {
+        console.log("error:", event);
+      };
+
+      request.onsuccess = function(event) {
+        var deferredQueue = request.result["requests"];
+        while(navigator.onLine && deferredQueue.length) {
+          var nextRequest = deferredQueue.shift();
+          var deferredFunc = eval(nextRequest.callback);
+          if (typeof(deferredFunc) === "function") deferredFunc(JSON.parse(nextRequest.data));
+          var requestUpdate = objectStore.put({domain: window.location.origin, requests: deferredQueue});
+           requestUpdate.onerror = function(event) {
+             console.log("error:", event);
+           };
+           requestUpdate.onsuccess = function(event) {
+             console.log("successfully updated", event);
+           };
+        }
+        console.log("finished processing queue");
+      }
+
+    };
+>>>>>>> 9f3f2ea5b3135e220790b90ca14044a4f91c9a97
+
+
+  }
+
+  // function createDB() {
+    // console.log('in createDB');
+    // var request = indexedDB.open('DEFERRED', 1);
+    //
+    // request.onerror = function(event) {
+    //   console.error("Error:", event);
+    // };
+    //
+    // request.onupgradeneeded = function(event) {
+    //   console.log('in onupgradeneeded');
+    //   db = event.target.result;
+    //   console.log("db is", db);
+    //   var objectStore = db.createObjectStore("deferredRequests", { keyPath: "domain" });
+    // };
+    //
+    // request.onsuccess = function(event) {
+    //   console.log('in onsuccess');
+    //   db = event.target.result;
+    //     console.log("db is", db);
     //   var dRObjectStore = db.transaction("deferredRequests", "readwrite").objectStore("deferredRequests");
     //   dRObjectStore.add({domain: window.location.origin, requests: []});
-    // }
-  };
+    // };
+  // }
 
-  request.onsuccess = function(event) {
-    console.log("Success opening dR db:", event);
-    db = event.target.result;
-console.log("in onsuccess, db", db, event);
-      var dRObjectStore = db.transaction("deferredRequests", "readwrite").objectStore("deferredRequests");
-      dRObjectStore.add({domain: window.location.origin, requests: []});
-  };
-
-
-  // STANDARD CODE
-
-});
-
-
-// JOE'S CODE
-mjb.cache = function(fileArray, fallback) {
-  if(fallback) fileArray.push(fallback);
-  var file = {};
-  file.command = "cache";
-  file.info = fileArray;
-  navigator.serviceWorker.controller.postMessage(file);
-}
-
-// MASHA'S CODE
-// cache the fallback page first
-
-mjb.fallback = function(fallbackPage) {	
-	if (!navigator.serviceWorker.controller) {
-		console.log("no sw");
-		navigator.serviceWorker.register('sw.js', {
-			scope: '.'
-		}).then(function(registration) {
-			var serviceWorker;
-			if (registration.installing) {
-				serviceWorker = registration.installing || registration.waiting || registration.active
-			}
-
-			if (serviceWorker) {
-				console.log(serviceWorker.state);
-				serviceWorker.addEventListener('statechange', function(event) {
-					console.log(event.target.state);
-					if(this.state === 'activated') {
-						console.log("ok sw");
-						return navigator.serviceWorker.controller.postMessage({command: 'fallback', info: fallbackPage});
-					}
-				});
-			}
-		});
-	}else {
-		console.log("yes sw")
-		return navigator.serviceWorker.controller.postMessage({command: 'fallback', info: fallbackPage});
-	}
-	
-//	if(!navigator.serviceWorker.controller) {
-//		console.log("no sw");
-//		self.addEventListener('statechange', function() {
-//			if(this.state === 'activated') {
-//				console.log("ok sw");
-//				return navigator.serviceWorker.controller.postMessage({command: 'fallback', info: fallbackPage});
-//			}
-//		});
-//	}
-}
-
-mjb.fallback("/offline.html");
-
-// BRANDON'S CODE
-//  This ultimately needs to be moved to browser storage (indexedDB?)
-// mjb.deferredRequests = mjb.deferredRequests || [];
-
-mjb.sendOrQueue = function(deferredFunc) {
-  if (navigator.onLine) return deferredFunc();
-  var objectStore = db.transaction(["deferredRequests"], "readwrite").objectStore("deferredRequests");
-  var request = objectStore.get(window.location.origin);
-  request.onerror = function(event) {
-    console.log("error:", event);
-  };
-  request.onsuccess = function(event) {
-    // Get the old value that we want to update
-    var deferredQueue = request.result["requests"];
-
-    // update the value(s) in the object that you want to change
-    deferredQueue.push(deferredFunc.toString());
-
-    // Put this updated object back into the database.
-    var requestUpdate = objectStore.put(deferredQueue);
-     requestUpdate.onerror = function(event) {
-       console.log("error:", event);
-     };
-     requestUpdate.onsuccess = function(event) {
-       console.log("successfully updated");
-     };
-  };
-}
-
-
-mjb.emptyQueue = function() {
-  while(navigator.onLine && mjb.deferredRequests.length) {
-    (mjb.deferredRequests.shift())();
+  function sendToSW(messageObj) {
+    console.log("in sendToSW, serviceWorker is", serviceWorker);
+    if (!serviceWorker) {
+      console.log("no serviceWorker found,");
+      navigator.serviceWorker.oncontrollerchange = function() {
+        console.log("controller change", navigator.serviceWorker);
+        serviceWorker = navigator.serviceWorker.controller;
+        serviceWorker.postMessage(messageObj);
+        // serviceWorker.removeEventListener('oncontrollerchange', listener);
+      }
+    } else {
+      serviceWorker.postMessage(messageObj);
+    }
   }
-}
 
-// STANDARD CODE
+})();
