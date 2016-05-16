@@ -53,7 +53,7 @@ window.addEventListener('load', function(event) {
 
 
   // MASHA'S CODE
-//window.postMessage('test-message!!', '/');
+	
   // BRANDON'S CODE
   const dbName = "MJB_DEFERRED";
 

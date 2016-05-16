@@ -45,8 +45,6 @@ self.addEventListener('fetch', function(event) {
 //  )
 
   // MASHA'S CODE
-	// if online, check if asset is in cache, if not fetch from server.
-	// if offline, check if it's in the cache, if not show fallback page.
 	event.respondWith(
 		caches.match(event.request).then(function(response) {
 			if(online) {
