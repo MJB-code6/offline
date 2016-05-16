@@ -29,14 +29,7 @@ function sendMessage(value) {
   console.log('in sendMessage');
   console.log('argument:', value);
   var obj = prepareMessage();
-<<<<<<< HEAD
-	// Doing steps necessary before so you know what to save into function
-	// show differences between using with our function and without.
-	// only difference is mj.sendOrQueue. Both ways they send they're request, but this function allows an additional option to queue the requests if somehow user goes offline and be able to process the request automatically when back online.
-  mjb.sendOrQueue(function(){
-=======
   mjb.sendOrQueue(obj, function(obj){
->>>>>>> 9f3f2ea5b3135e220790b90ca14044a4f91c9a97
     $.ajax({
       type: 'POST',
       data: JSON.stringify(obj),

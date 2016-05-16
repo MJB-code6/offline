@@ -16,53 +16,6 @@ self.addEventListener('activate', function(event) {
 });
 
 self.addEventListener('fetch', function(event) {
-<<<<<<< HEAD
-  // JOE'S CODE
-//  event.respondWith(
-//    caches.match(event.request)
-//    .then(function(response) {
-//      if (response) return response;
-//      return fetch(event.request);
-//    }).catch(function(){
-//      return caches.match(JOE_FILES[JOE_FILES.length - 1]); //responde to no internet
-//    })
-//  )
-
-  // MASHA'S CODE
-	event.respondWith(
-		caches.match(event.request).then(function(response) {
-			if(online) {
-				return response || fetch(event.request);
-			}else if(!online) {
-				return response || caches.open(CACHE_MASHA).then(function(cache) {
-					console.log('I am offline') );
-					return cache.match('offline.html');
-				});
-			}
-		})
-	);
-
-  // BRANDON'S CODE
-
-
-  // STANDARD CODE
-
-//   event.respondWith(
-//     caches.match(event.request)
-//       .then(function(response) {
-//         if (response) {
-//           console.log(
-//             '[fetch] Returning from ServiceWorker cache: ',
-//             event.request.url
-//           );
-//           return response;
-//         }
-//         console.log('[fetch] Returning from server: ', event.request.url);
-//         return fetch(event.request);
-//       }
-//     )
-//   );
-=======
   event.respondWith(
      caches.match(event.request)
        .then(function(response) {
@@ -72,7 +25,6 @@ self.addEventListener('fetch', function(event) {
          return;// caches.match(cacheFirstAssets[cacheFirstAssets.length - 1]);
        })
   )
->>>>>>> 9f3f2ea5b3135e220790b90ca14044a4f91c9a97
 });
 
 self.addEventListener('message', function(event) {
@@ -103,7 +55,6 @@ self.addEventListener('message', function(event) {
   }
 
   if (event.data.command === "createDB") {
-console.log('in createDB');
     var request = indexedDB.open('DEFERRED', 1);
 
     request.onerror = function() {
@@ -113,14 +64,12 @@ console.log('in createDB');
     request.onupgradeneeded = function(e) {
       console.log('in onupgradeneeded');
       db = e.target.result;
-console.log("db is", db);
       var objectStore = db.createObjectStore("deferredRequests", { keyPath: "domain" });
     };
 
     request.onsuccess = function(e) {
       console.log('in onsuccess');
       db = e.target.result;
-console.log("db is", db);
       var dRObjectStore = db.transaction("deferredRequests", "readwrite").objectStore("deferredRequests");
       dRObjectStore.add({domain: event.data.info, requests: []});
     };
@@ -153,33 +102,5 @@ console.log("db is", db);
        };
     };
   }
-
-  // if (event.data.command === "empty") {
-  //       console.log('event', event);
-  //   var objectStore = db.transaction(["deferredRequests"], "readwrite").objectStore("deferredRequests");
-  //   var request = objectStore.get(event.data.info);
-  //
-  //   request.onerror = function(e) {
-  //     console.log("error:", e);
-  //   };
-  //
-  //   request.onsuccess = function(e) {
-  //     var deferredQueue = request.result["requests"];
-  //
-  //     while(navigator.onLine && deferredQueue.length) {
-  //       var nextRequest = deferredQueue.shift();
-  //       var deferredFunc = eval(nextRequest.callback);
-  //       if (typeof(deferredFunc) === "function") deferredFunc(JSON.parse(nextRequest.data));
-  //       var requestUpdate = objectStore.put({domain: event.data.info, requests: deferredQueue});
-  //        requestUpdate.onerror = function(e) {
-  //          console.log("error:", e);
-  //        };
-  //        requestUpdate.onsuccess = function(e) {
-  //          console.log("successfully updated", e);
-  //        };
-  //     }
-  //     console.log("finished processing queue");
-  //   }
-  // }
 
 });
