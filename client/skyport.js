@@ -1,41 +1,54 @@
 (function() {
-  console.log('start of index.js, this is', this);
+  //  Service Workers are not (yet) supported by all browsers
   if (!navigator.serviceWorker) return;
 
+  //  A reference to our database in indexedDB
   var db;
+
   var serviceWorker = navigator.serviceWorker.controller;
-  console.log("nscontroller", navigator.serviceWorker.controller);
+
+  //  Register the service worker once on load
   if (!serviceWorker) {
-    navigator.serviceWorker.register('/sw.js', {
+    navigator.serviceWorker.register('/sw-skyport.js', {
       scope: '.'
     }).then(function(registration) {
-      console.log('The service worker has been registered ', registration);
       serviceWorker = registration.active || registration.waiting || registration.installing;
-      serviceWorker.onmessage = function(event) {
-        console.log("I got a message from the sw:", event.data);
-      }
-      mjb.cache(['/index.js']);
+
+      //  This file should be included in the cache for offline use
+      skyport.cache(['/skyport.js']);
+
+      //  Tell the service worker to create storage in indexedDB
       sendToSW({command: 'createDB', info: window.location.origin});
     });
   }
 
-  window.mjb =  window.mjb || {
+  //  Make useful functions available on the window object
+  window.skyport =  window.skyport || {
 
+    //  Use this function to add assets to cache for offline use
     cache: function(assetArray, fallback) {
-      if (fallback) assetArray.push(fallback);
       sendToSW({
         command: 'cache',
         info: assetArray
       });
+
+      if (fallback) {
+        sendToSW({
+          command: 'fallback',
+          info: fallback
+        });
+      }
     },
 
-    fallback: function(fallbackPage) {
+    //  Use this function to add a default page if a resource is not cached
+    fallback: function(fallback) {
     	sendToSW({
         command: 'fallback',
-        info: fallbackPage
+        info: fallback
       });
     },
 
+    //
     sendOrQueue: function(dataObj, deferredFunc) {
       if (navigator.onLine) return deferredFunc(dataObj);
       if (typeof(deferredFunc) !== "function") return;
@@ -51,18 +64,15 @@
   };
 
   window.addEventListener('online', function(event) {
-    console.log("heard 'online'");
     sendToSW({command: "online", info: true});
     emptyQueue();
   });
 
   window.addEventListener('offline', function(event) {
-    console.log("heard 'offline'");
     sendToSW({command: "online", info: false});
   });
 
   window.addEventListener('load', function(event) {
-    console.log("heard 'load'");
   });
 
   function emptyQueue() {
@@ -74,41 +84,34 @@
       var request = objectStore.get(window.location.origin);
 
       request.onerror = function(event) {
-        console.log("error:", event);
       };
 
       request.onsuccess = function(event) {
         var deferredQueue = request.result["requests"];
+
         while(navigator.onLine && deferredQueue.length) {
           var nextRequest = deferredQueue.shift();
           var deferredFunc = eval(nextRequest.callback);
           if (typeof(deferredFunc) === "function") deferredFunc(JSON.parse(nextRequest.data));
           var requestUpdate = objectStore.put({domain: window.location.origin, requests: deferredQueue});
            requestUpdate.onerror = function(event) {
-             console.log("error:", event);
            };
            requestUpdate.onsuccess = function(event) {
-             console.log("successfully updated", event);
            };
         }
-        console.log("finished processing queue");
       }
+
     };
   }
 
   function sendToSW(messageObj) {
-    console.log("in sendToSW, serviceWorker is", serviceWorker);
     if (!serviceWorker) {
-      console.log("no serviceWorker found,");
       navigator.serviceWorker.oncontrollerchange = function() {
-        console.log("controller change", navigator.serviceWorker);
         serviceWorker = navigator.serviceWorker.controller;
         serviceWorker.postMessage(messageObj);
-        // serviceWorker.removeEventListener('oncontrollerchange', listener);
       }
     } else {
       serviceWorker.postMessage(messageObj);
     }
   }
-
 })();
