@@ -46,19 +46,16 @@ self.addEventListener('message', function(event) {
     online = event.data.info;
   }
 
-
+  if (event.data.command === "createDB") {
     var request = indexedDB.open('DEFERRED', 1);
 
-    request.onerror = function() {
-    };
-
     request.onupgradeneeded = function(e) {
-
+      db = e.target.result;
       var objectStore = db.createObjectStore("deferredRequests", { keyPath: "domain" });
     };
 
     request.onsuccess = function(e) {
-
+      db = e.target.result;
       var dRObjectStore = db.transaction("deferredRequests", "readwrite").objectStore("deferredRequests");
       dRObjectStore.add({domain: event.data.info, requests: []});
     };

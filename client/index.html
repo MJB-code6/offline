@@ -1,23 +1,68 @@
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Document</title>
-<!--
-   <link rel='stylesheet' type='text/css' href='./style.css'></link> 
-</head>
--->
-<body>
-  <p>Display only this page</p>
-  <button onclick='nextImage()'>Change Animal</button>
-  <div id='imageArea'><img src='./assets/lion.png'></div>
-  <video width="320" height="240" controls>
-    <source src="./assets/vid3.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
-  <a href='./messages.html'>Messages</a>
-	
-  <a href='./three.html'>Page 3</a>
-</body>
-<script src='./index.js'></script>
-<script src='./app.js'></script>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>SkyPort Example Page</title>
+
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+		<link rel="stylesheet" type="text/css" href="style.css">
+  </head>
+
+  <body>
+
+    <div class="container">
+      <div class="jumbotron">
+        <h1 style="color: #44A0DD">SkyPort</h1>
+				<div class="to-center">
+					<video width="" height="240" controls>
+						<source src="./assets/vid3.mp4" type="video/mp4">
+					</video>
+				</div>
+        <p class="lead">
+					<ul>
+						<li class="lead text-center" style="color: grey"> Simple setup. Offline-first. Customizable. </li>
+					</ul>
+				</p>
+        <p class="to-center">
+					<a class="btn btn-lg btn-success text-center to-center front-btn" href="./messages.html" role="button">Messages</a><br />
+					<!--use to show that the fallback page works on every type of link, or if asset is not in cache -->
+					<a class="btn btn-lg btn-success text-center to-center" href="./three.html" role="button">Another Page</a>
+				</p>
+      </div>
+
+      <div class="row">
+        <div class="col-lg-4 box">
+          <h2>Offline First.<br />Improve Performance.</h2>
+					<p class="text-center lead">Serve files from a cache, server, or fallback page, depending on if user is online or offline. </p>
+					<img src="/assets/birdy1.jpg" class="img-responsive img-circle to-center">
+        </div>
+        <div class="col-lg-4 box">
+          <h2>Easy Setup,<br />few lines of code.</h2>
+          <p class="text-center lead">A simple library that allows developers to focus less on setup and more on development. In only of a few lines of code developers can transform an online-only user experience into an offline-first web app.
+					</p>
+					<img src="/assets/birdy2.gif" class="img-responsive img-circle to-center">
+        </div>
+        <div class="col-lg-4 box">
+          <h2>Send Requests<br />when Offline.</h2>
+          <p class="text-center lead">Defer functions/requests if user offline, only to be successfully synced once they are online again.</p>
+					<div><img src="/assets/birdy3.gif" class="img-responsive img-circle to-center"></div>
+        </div>
+      </div>
+
+      <!-- Site footer -->
+      <footer class="footer">
+        <p class="text-center">&copy; MJB TEAM</p>
+      </footer>
+
+    </div> <!-- /container -->
+    <script src='./skyport.js'></script>
+	<script src='./app.js'></script>
+  </body>
 </html>
