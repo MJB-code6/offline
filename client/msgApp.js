@@ -29,7 +29,7 @@ function sendMessage(value) {
   console.log('in sendMessage');
   console.log('argument:', value);
   var obj = prepareMessage();
-  mjb.sendOrQueue(function(){
+  skyport.sendOrQueue(obj, function(obj){
     $.ajax({
       type: 'POST',
       data: JSON.stringify(obj),
@@ -40,28 +40,6 @@ function sendMessage(value) {
     });
   });
 }
-
-// var messageQueue = [];
-//
-// function queueMessage() {
-//   console.log('in queueMessage');
-//   var obj = prepareMessage();
-//   messageQueue.push(obj);
-// }
-
-// function sendQueue() {
-//   console.log('in sendQueue');
-//   while (messageQueue.length) {
-//     $.ajax({
-//       type: 'POST',
-//       data: JSON.stringify(messageQueue.shift()),
-//       contentType: 'application/json; charset=UTF-8',
-//       url: './messages',
-//     }).then(function(data) {
-//       getMessage();
-//     });
-//   }
-// }
 
 function prepareMessage() {
   var message = $('#newComment').val().trim();
