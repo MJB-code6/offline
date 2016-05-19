@@ -1,5 +1,5 @@
 $(document).ready(function(e) {
-  getMessage();
+  // getMessage();
   $('#message-button').on('click', function() {
     sendMessage();
   });
@@ -26,8 +26,6 @@ function renderMessages(messages) {
 }
 
 function sendMessage(value) {
-  console.log('in sendMessage');
-  console.log('argument:', value);
   var obj = prepareMessage();
   skyport.sendOrQueue(obj, function(obj){
     $.ajax({

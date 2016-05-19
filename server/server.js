@@ -7,6 +7,11 @@ const messageController = require('./messages/messageController');
 
 app.use(bodyParser.json());
 
+app.use(function(req, res, next) {
+  console.log('on server, req is', req.url);
+  next();
+});
+
 app.use(express.static(path.join(__dirname, '../client')));
 
 app.get('/messages', messageController.getMessages);
