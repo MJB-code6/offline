@@ -1,3 +1,4 @@
+console.log('at the start of app.js')
 skyport.cache([
   "/",
   "/index.html",
@@ -16,4 +17,5 @@ skyport.cache([
   // "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-alpha1/jquery.min.js"
 ]);
 
-// skyport.fallback("/messages");
+
+skyport.dynamic(["/messages.html"]);

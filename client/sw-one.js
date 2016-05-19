@@ -51,8 +51,9 @@ if (!window) {
 
   self.addEventListener('message', function(event) {
     console.log('heard a message');
-  	if (event.data.command === "cache" && online) {
-      console.log('heard a message to cache', event.data.info)
+    var command = event.data.command;
+  	if (command === "cache" && online) {
+      console.log('heard a message to precache', event.data.info)
       caches.open('precache')
         .then(function(cache) {
           return cache.addAll(event.data.info);
@@ -61,44 +62,28 @@ if (!window) {
         });
     }
 
-  	if(event.data.command === "fallback") {
+  	if(command === "fallback" && online) {
   		caches.open('fallback')
   	 		.then(function(cache) {
   		 		return cache.add(event.data.info);
   	 		})
   	}
 
-    if (event.data.command === "online") {
+    if (command === "dynamic" && online) {
+      console.log('heard a message to postcache', event.data.info)
+      caches.open('postcache')
+        .then(function(cache) {
+          return cache.addAll(event.data.info);
+        })
+        .catch(function() {
+        });
+    }
+
+    if (command === "online") {
       online = event.data.info;
     }
 
-    if (event.data.command === "createDB") {
-      getIDB(event.data);
-      // console.log('in createdb, getIDB returned', objectStore);
-      // objectStore.add({domain: event.data.info, requests: []});
-    }
-
-    if (event.data.command === "queue") {
-      getIDB(event.data);
-      // console.log('in queue, getIDB returned', objectStore);
-      // var retrieveRequest = objectStore.get(event.data.info.domain);
-
-      // retrieveRequest.onsuccess = function(e) {
-      //   // Get the old value that we want to update
-      //   var deferredQueue = request.result["requests"];
-      //
-      //   // update the value(s) in the object that you want to change
-      //   deferredQueue.push({
-      //     data: event.data.info.dataObj,
-      //     callback: event.data.info.deferredFunc
-      //   });
-      //
-      //   // Put this updated object back into the database.
-      //   var requestUpdate = objectStore.put({domain: event.data.info.domain, requests: deferredQueue});
-      // };
-    }
-
-    if (event.data.command === 'dequeue') {
+    if (command === 'createDB' || command === 'queue' || command === 'dequeue') {
       getIDB(event.data);
     }
 
@@ -216,7 +201,18 @@ if (window) {
         });
       },
 
-      //
+      dynamic: function(assetsArray) {
+        // var assetsObject = {};
+        // for(var i = 0; i < assetsArray.length; i++) {
+        //   assetsArray[i] = window.location.origin + assetsArray[i];
+        //   assetsObject[assetsArray[i]] = 0;
+        // }
+        sendToSW({
+          command: 'dynamic',
+          info: assetsArray//assetsObject
+        });
+      },
+
       sendOrQueue: function(dataObj, deferredFunc) {
         if (navigator.onLine) return deferredFunc(dataObj);
         if (typeof(deferredFunc) !== "function") return;
@@ -247,26 +243,6 @@ if (window) {
 
     window.addEventListener('load', function(event) {
     });
-
-    // function emptyQueue() {
-    //   var objectStore = getIDB()
-    //   var request = objectStore.get(window.location.origin);
-    //
-    //   request.onerror = function(event) {
-    //   };
-    //
-    //   request.onsuccess = function(event) {
-    //     var deferredQueue = request.result["requests"];
-    //
-    //     while(navigator.onLine && deferredQueue.length) {
-    //       var nextRequest = deferredQueue.shift();
-    //       var deferredFunc = eval(nextRequest.callback);
-    //       if (typeof(deferredFunc) === "function") deferredFunc(JSON.parse(nextRequest.data));
-    //       var requestUpdate = objectStore.put({domain: window.location.origin, requests: deferredQueue});
-    //     }
-    //   }
-    //
-    // }
 
     function sendToSW(messageObj) {
       if (!serviceWorker) {
