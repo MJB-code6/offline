@@ -1,8 +1,19 @@
 const CACHE_FIRST = 'precache';
 const FALLBACK_CACHE = 'fallback';
+
 var online = true;
 var db;
 var precacheAssets = precacheAssets || [];
+var dynamic;
+var static;
+var dynamicAssets = dynamicAssets || {};
+
+caches.open(FALLBACK_CACHE).then(function(cache) {
+  dynamic = cache;
+});
+caches.open(CACHE_FIRST).then(function(cache) {
+  static = cache;
+});
 
 self.addEventListener('install', function(event) {
   return self.skipWaiting();
@@ -14,14 +25,27 @@ self.addEventListener('activate', function(event) {
 
 self.addEventListener('fetch', function(event) {
   event.respondWith(
-       caches.match(event.request)
-         .then(function(response) {
-           return online ? fetch(event.request) : response;
-         }).catch(function(event){
-           return;
-         })
-    )
-  });
+    caches.open(CACHE_FIRST).then(function(cache) {
+      return cache.match(event.request.clone())
+      .then(function(response) {
+        if(response) return response;
+         return fetch(event.request.clone())
+          .then(function(netRes) {
+              if (netRes.url in dynamicAssets) {
+                dynamic.put(event.request, netRes.clone());
+              }
+            return netRes;
+          })
+          .catch(function() {
+            return dynamic.match(event.request)
+            .then(function(response) {
+              return response;
+            })
+          })
+      })
+    })
+  )
+});
 
 self.addEventListener('message', function(event) {
 
@@ -33,6 +57,10 @@ self.addEventListener('message', function(event) {
       })
       .catch(function() {
       });
+  }
+
+  if (event.data.command === "dynamic") {
+      dynamicAssets = event.data.info;
   }
 
 	if(event.data.command === "fallback") {

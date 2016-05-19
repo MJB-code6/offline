@@ -1,6 +1,6 @@
 skyport.cache([
   "/index.html",
-  "/messages.html",
+  // "/messages.html",
   "/app.js",
   "/msgApp.js",
   "/style.css",
@@ -15,3 +15,5 @@ skyport.cache([
 ]);
 
 // skyport.fallback("/messages");
+
+skyport.dynamic(["/messages.html"]);
