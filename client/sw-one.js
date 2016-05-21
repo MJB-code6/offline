@@ -1,5 +1,4 @@
 var window;
-console.log('at the start of sw-one file, window is', window);
 /*
   The code below runs in the service worker global scope
 */
@@ -7,6 +6,7 @@ if (!window) {
   var db;
   var online = true;
   var precache, postcache;
+  console.log('swgs', this);
 
   caches.open('precache').then(function(cache) {
     precache = cache;
@@ -33,87 +33,109 @@ if (!window) {
     event.respondWith(
       precache.match(event.request.clone())
         .then(function(response) {
-          if(response) return response;
-          return fetch(event.request.clone())
-            .then(function(netRes) {
-              postcache.put(event.request, netRes.clone());
-              return netRes;
-            })
-            .catch(function() {
-              return postcache.match(event.request)
-              .then(function(response) {
-                return response;
+          if(response) {
+            console.log('returning precache response');
+            return response;
+          } else if (online) {
+            return fetch(event.request.clone())
+              .then(function(netRes) {
+                return caches.open('postcache').then(function(cache) {
+                  return cache.match(event.request.clone()).then(function(response) {
+                    if (response && event.request.method === 'GET') {
+                      console.log('putting something into postcache');
+                      cache.put(event.request.clone(), netRes.clone());
+                    }
+                    console.log('returning net response');
+                    return netRes;
+                  })
+                })
               })
-            })
+              .catch(function() {
+                return caches.open('postcache').then(function(cache) {
+                  return cache.match(event.request.clone()).then(function(response) {
+                    return response;
+                  });
+                });
+              });
+            } else {
+              return caches.open('postcache').then(function(cache) {
+                return cache.match(event.request.clone()).then(function(response) {
+                  return response;
+                });
+              });
+            }
         })
     )
   });
 
   self.addEventListener('message', function(event) {
-    console.log('heard a message');
-  	if (event.data.command === "cache" && online) {
+    var command = event.data.command;
+    console.log('heard a message', command);
+
+    if (command === "cache" && online) {
+      var items = event.data.info;
       console.log('heard a message to cache', event.data.info)
       caches.open('precache')
         .then(function(cache) {
-          return cache.addAll(event.data.info);
+          items.forEach(function(item) {
+            cache.match(item).then(function(res) {
+              if (!res) cache.add(item);
+              else console.log('res header', res.headers)
+            }).catch(function(err) {console.log('error:', err)});
+          });
         })
-        .catch(function() {
+        .catch(function(err) {
+          console.log('error in precache', err);
         });
     }
 
-  	if(event.data.command === "fallback") {
+  	if(command === "fallback") {
   		caches.open('fallback')
   	 		.then(function(cache) {
   		 		return cache.add(event.data.info);
   	 		})
   	}
 
-    if (event.data.command === "online") {
+    if(command === 'dynamic') {
+  		caches.open('postcache')
+  	 		.then(function(cache) {
+  		 		return cache.add(event.data.info);
+  	 		})
+  	}
+
+    if (command === "online") {
+      if (event.data.info === false) {
+        precache.keys().then(function(keylist) {
+          keylist.forEach(function(req) {
+            console.log('precache req headers', req.headers);
+          });
+        });
+      }
       online = event.data.info;
     }
 
-    if (event.data.command === "createDB") {
+    if (command === "createDB" || command === "queue") {
       getIDB(event.data);
       // console.log('in createdb, getIDB returned', objectStore);
       // objectStore.add({domain: event.data.info, requests: []});
     }
 
-    if (event.data.command === "queue") {
-      getIDB(event.data);
-      // console.log('in queue, getIDB returned', objectStore);
-      // var retrieveRequest = objectStore.get(event.data.info.domain);
-
-      // retrieveRequest.onsuccess = function(e) {
-      //   // Get the old value that we want to update
-      //   var deferredQueue = request.result["requests"];
-      //
-      //   // update the value(s) in the object that you want to change
-      //   deferredQueue.push({
-      //     data: event.data.info.dataObj,
-      //     callback: event.data.info.deferredFunc
-      //   });
-      //
-      //   // Put this updated object back into the database.
-      //   var requestUpdate = objectStore.put({domain: event.data.info.domain, requests: deferredQueue});
-      // };
-    }
-
-    if (event.data.command === 'dequeue') {
-      getIDB(event.data);
-    }
+    // if (command === 'dequeue') {
+    //   getIDB(event.data);
+    // }
 
   });
 
   function getIDB(data) {
-    var request = indexedDB.open('DEFERRED', 1);
+    var openRequest = indexedDB.open('DEFERRED', 1);
 
-    request.onupgradeneeded = function(e) {
+    openRequest.onupgradeneeded = function(e) {
       db = e.target.result;
       var objectStore = db.createObjectStore("deferredRequests", { keyPath: "domain" });
       console.log('in upgradeneeded, db is', db);
     };
 
-    request.onsuccess = function(e) {
+    openRequest.onsuccess = function(e) {
       db = e.target.result;
       var objectStore = db.transaction("deferredRequests", "readwrite").objectStore("deferredRequests");
       console.log('in onsuccess, db is', db);
@@ -141,10 +163,10 @@ if (!window) {
         };
       }
       else if (data.command === 'dequeue') {
-        var request = objectStore.get(data.info.domain);
+        var retrieveRequest = objectStore.get(data.info.domain);
 
-        request.onsuccess = function(event) {
-          var deferredQueue = request.result["requests"];
+        retrieveRequest.onsuccess = function(event) {
+          var deferredQueue = retrieveRequest.result["requests"];
 
           while(navigator.onLine && deferredQueue.length) {
             var nextRequest = deferredQueue.shift();
@@ -194,10 +216,12 @@ if (window) {
     window.skyport =  window.skyport || {
 
       //  Use this function to add assets to cache for offline use
-      cache: function(assetArray, fallback) {
+      cache: function(assets, fallback) {
+        console.log('cache args',arguments.callee.caller);
+        if (!Array.isArray(assets)) assets = [assets];
         sendToSW({
           command: 'cache',
-          info: assetArray
+          info: assets
         });
 
         if (fallback) {
@@ -213,6 +237,13 @@ if (window) {
       	sendToSW({
           command: 'fallback',
           info: fallback
+        });
+      },
+
+      dynamic: function(assets) {
+      	sendToSW({
+          command: 'dynamic',
+          info: assets
         });
       },
 
@@ -233,12 +264,13 @@ if (window) {
 
     window.addEventListener('online', function(event) {
       sendToSW({command: "online", info: true});
-      sendToSW({
-        command: 'dequeue',
-        info: {
-          domain: window.location.origin
-        }
-      });
+      dequeue();
+      // sendToSW({
+      //   command: 'dequeue',
+      //   info: {
+      //     domain: window.location.origin
+      //   }
+      // });
     });
 
     window.addEventListener('offline', function(event) {
@@ -248,25 +280,26 @@ if (window) {
     window.addEventListener('load', function(event) {
     });
 
-    // function emptyQueue() {
-    //   var objectStore = getIDB()
-    //   var request = objectStore.get(window.location.origin);
-    //
-    //   request.onerror = function(event) {
-    //   };
-    //
-    //   request.onsuccess = function(event) {
-    //     var deferredQueue = request.result["requests"];
-    //
-    //     while(navigator.onLine && deferredQueue.length) {
-    //       var nextRequest = deferredQueue.shift();
-    //       var deferredFunc = eval(nextRequest.callback);
-    //       if (typeof(deferredFunc) === "function") deferredFunc(JSON.parse(nextRequest.data));
-    //       var requestUpdate = objectStore.put({domain: window.location.origin, requests: deferredQueue});
-    //     }
-    //   }
-    //
-    // }
+    function dequeue() {
+      var openRequest = indexedDB.open('DEFERRED', 1);
+
+      openRequest.onsuccess = function(e) {
+        var db = e.target.result;
+        var objectStore = db.transaction("deferredRequests", "readwrite").objectStore("deferredRequests");
+        var retrieveRequest = objectStore.get(window.location.origin);
+
+        retrieveRequest.onsuccess = function(event) {
+          var deferredQueue = retrieveRequest.result["requests"];
+
+          while(navigator.onLine && deferredQueue.length) {
+            var nextRequest = deferredQueue.shift();
+            var deferredFunc = eval(nextRequest.callback);
+            if (typeof(deferredFunc) === "function") deferredFunc(JSON.parse(nextRequest.data));
+            var requestUpdate = objectStore.put({domain: window.location.origin, requests: deferredQueue});
+          }
+        }
+      }
+    }
 
     function sendToSW(messageObj) {
       if (!serviceWorker) {
