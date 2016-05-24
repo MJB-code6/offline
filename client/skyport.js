@@ -9,13 +9,13 @@
 
   //  Register the service worker once on load
   if (!serviceWorker) {
-    navigator.serviceWorker.register('/sw-skyport.js', {
+    navigator.serviceWorker.register('./sw_skyport.js', {
       scope: '.'
     }).then(function(registration) {
       serviceWorker = registration.active || registration.waiting || registration.installing;
-
+      console.log('i just registered a service worker :-P');
       //  This file should be included in the cache for offline use
-      skyport.cache(['/skyport.js']);
+      // skyport.cache(['/skyport.js']);
 
       //  Tell the service worker to create storage in indexedDB
       sendToSW({command: 'createDB', info: window.location.origin});
@@ -60,19 +60,6 @@
           deferredFunc: '(' + deferredFunc.toString() + ')'
         }
       });
-    },
-
-    //caching dynamic data
-    dynamic: function(assetsArray) {
-      var assetsObject = {};
-      for(var i = 0; i < assetsArray.length; i++) {
-        assetsArray[i] = window.location.origin + assetsArray[i];
-        assetsObject[assetsArray[i]] = 0;
-      }
-      sendToSW({
-        command: 'dynamic',
-        info: assetsObject
-      })
     }
   };
 

@@ -1,0 +1,28 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SkyPort Post Page</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.3/jquery.min.js"></script>
+  <link rel='stylesheet' type='text/css' href='./style.css'>
+</head>
+<body>
+  <h1 style="margin-top: 60px; color: white">Featured Video</h1>
+  <div class="videoContainer">
+    <video controls preload="auto">
+      <source src="./assets/vid1.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <div id="messageBoard"></div>
+    <input type="text" id="newComment">
+    <button type="button" id="btnComment" onclick="sendMessage()">Send</button>
+  </div>
+	<p class="to-center">
+					<a class="btn btn-lg btn-success text-center to-center front-btn" href="./index.html" role="button" style="margin-top: -30px;">Home</a><br />
+				</p>
+
+</body>
+<script src='./sw-one.js'></script>
+<script src='./msgApp.js'></script>
+<!-- <script src='./justatest.js'></script> -->
+</html>
