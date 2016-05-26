@@ -3,8 +3,10 @@ var window;
   The code below runs in the service worker global scope
 */
 if (!window) {
-
+  console.log('registration scope',registration.scope);
+  console.log('swgs', this);
   var precache, postcache;
+  var precacheKeys = [];
 
   caches.open('precache').then(function(cache) {
     precache = cache;
@@ -16,6 +18,7 @@ if (!window) {
 
   self.addEventListener('install', function(event) {
     console.log('sw installing');
+    console.log(new Date(Date.now()));
     return self.skipWaiting();
   });
 
@@ -28,7 +31,8 @@ if (!window) {
     event.respondWith(
       precache.match(event.request.clone()).then(function(response) {
           if(response) {
-            return response;
+            console.log('precache fetch', event.request.url)
+            return response.clone();
           } else if (navigator.onLine) {
             return fetch(event.request.clone()).then(function(netRes) {
                 return caches.open('postcache').then(function(cache) {
@@ -48,6 +52,7 @@ if (!window) {
                 });
               });
             } else {
+              console.log('no response in precache to fetch');
               return caches.open('postcache').then(function(cache) {
                 return cache.match(event.request.clone()).then(function(response) {
                   return response;
@@ -61,19 +66,42 @@ if (!window) {
   self.addEventListener('message', function(event) {
     var command = event.data.command;
 
+    if (command === "cacheJSON" && navigator.onLine) {
+      var jsonFile = event.data.info;
+      console.log('jsonFile', jsonFile);
+      // fetch('https://ajax.googleapis.com/ajax/libs/jquery/2.2.3/jquery.min.js').then(function(response) {
+      //   return response;
+      // }).then(function(jQResponse) {
+      //   caches.open('precache')
+      //     .then(function(cache) {
+      //       console.log('jQResponse', jQResponse);
+      //       cache.put('https://ajax.googleapis.com/ajax/libs/jquery/2.2.3/jquery.min.js', jQResponse)
+            return fetch(jsonFile).then(function(response) {
+              return response.json()
+            })
+            .then(function(parsedFile) {
+              // console.log('check for jquery!');
+              addToCache(/*parsedFile.cache*/'precache', parsedFile.assets);
+            })
+        //   })
+        // })
+    }
+
+
     if (command === "cache" && navigator.onLine) {
       var items = event.data.info;
-      caches.open('precache')
-        .then(function(cache) {
-          items.forEach(function(item) {
-            cache.match(item).then(function(res) {
-              if (!res) cache.add(item);
-            }).catch(function(err) {console.log('error:', err)});
-          });
-        })
-        .catch(function(err) {
-          console.log('error in precache', err);
-        });
+      addToCache('precache', items);
+      // caches.open('precache')
+      //   .then(function(cache) {
+      //     items.forEach(function(item) {
+      //       cache.match(item).then(function(res) {
+      //         if (!res) cache.add(item);
+      //       }).catch(function(err) {console.log('error:', err)})
+      //     })
+      //   })//.then(cleanCache(precache, items)) // This is currently replacing everything except last call to cache
+      //   .catch(function(err) {
+      //     console.log('error in precache', err);
+      //   });
     }
 
   	if(command === "fallback") {
@@ -145,6 +173,39 @@ if (!window) {
       }
     };
   }
+
+  function addToCache(cacheName, itemsToAdd) {
+    caches.open(cacheName)
+      .then(function(cache) {
+        itemsToAdd.forEach(function(item) {
+          cache.match(item).then(function(response) {
+            if (!response) cache.add(item);
+          }).catch(function(err) {console.log('error:', err)})
+        })
+      }).catch(function(err) {
+        console.log('error in addToCache', err);
+      });
+  }
+
+  function fetchFromCache(cacheName, request) {
+
+  }
+
+  function cleanCache(cache, newItems) {
+    //  TODO: collect list of current keys in cache. check each key against
+    //  new cache array and remove from cache if not found
+    cache.keys().then(function(keylist) {
+      console.log('newItems', newItems);
+      keylist.forEach(function(key) {
+        if (newItems.indexOf(key.url.replace(registration.scope, '')) < 0) {
+          cache.delete(key);
+          console.log('deleting from cache', key.url);
+        }
+      })
+    }).then(function() {
+      console.log('old cache items should have been deleted')
+    }).catch(function(err) { console.log('there was an error in cleanCache', err)});
+  }
 }
 
 
@@ -181,7 +242,15 @@ if (window) {
 
       //  Use this function to add assets to cache for offline use
       cache: function(assets, fallback) {
-        console.log('cache args',arguments.callee.caller);
+        console.log('cache was given', typeof(assets), assets);
+        if (typeof assets === 'string' && /\.json$/.test(assets)) {
+          sendToSW({
+            command: 'cacheJSON',
+            info: assets
+          })
+          return;
+        }
+
         if (!Array.isArray(assets)) assets = [assets];
         sendToSW({
           command: 'cache',
