@@ -74,62 +74,74 @@ otherwise they provide an argument it will only clear whatevr argument they prov
       });
     }
   };
-	
-	// IDEA: FUNCTION FOR CLEARING ONLY SPECIFIC ITEMS IN EACH CHOICE? 
-	// OR ADD MORE COMPLEXITY TO resetSaved()
-	// if empty will reset everything in all 3 possibilities
-	// or include what you want to reset resetSaved:
-	// //(cache(required), itemInCacheToReset, indexdb(required), dbName(required), sw, whichSWToReset(if more than 1 running));
-	//If they include one item with specifics, it will assume you want to clear the entire item. So 'cache' without 'itemInCacheToReset' will reset entire cache while indexdb will only reset the item in indexdb if included in parameters:(cache, indexdb, dbName, sw, whichSWToReset(if more than 1 running)); 
-	// dbName
+
 	
 	// FUNCTION FOR CLEARING ALL ITEMS IN EACH CHOICE:
-	// choose the data you want to reset out of 3: sw, cache, or indexdb.
+	// choose the data you want to reset out of 3: sw, cache, or indexdb + nameOfDB.
 	function resetSaved() {
   // get all arguments entered into function
   var args = Array.prototype.slice.call(arguments);
-  var toReset = [];
-  
-	// if no parameters will assume you want to reset sw, cache, and indexdb.
+
   if(args.length === 0) { 
-    toReset.push(
-			{command: "reset-cache"},
-			{command: "reset-indexdb"},
-			{command: "reset-sw"}
-		);
+    return undefined;
   }else if(args.length > 0) {
    	// loop through function, if particular argument exists then send
     for(var i=0; i<args.length; i++) {
       if(args[i] === "cache") { 
-      	toReset.push({command: "reset-cache"});
-      }else if(args[i] === "indexdb" && args[i] !== args[args.length-1] && args[i+1] !== "sw") { 
-        toReset.push({command: "reset-indexdb", info: args[i+1]});
+      	resetCache();
+      }else if(args[i] === "indexedb" && args[i] !== args[args.length-1] && args[i+1] !== "sw") { 
+        resetIndexedb(args[i+1]);
       }else if(args[i] === "sw") { 
-        toReset.push({command: "reset-sw"});
-//				navigator.serviceWorker.getRegistrations().then(function(registrations) {
-//					console.log(registrations);
-//					console.log("yeah1");
-//					for(var registration in registrations) {
-//						console.log("yeah2");
-//						var sw = registrations[registration];
-//						// console.log(registrations[registration]);
-//						sw.unregister().then(function(boolean) {
-//							console.log("worked!");
-//    				});
-//					}
-//				});
+        resetSW();
       } 
     }
   }
 		
-  // if none of the items mentioned match any of the three possible items return
-  if(toReset.length === 0) { return };
-  
-		console.log('toReset: ', toReset)
-  // send array of object commands to be cleared to SW
-  sendToSW(toReset);
+	function resetCache() {
+		console.log("in reset-cache!");
+		caches.keys().then(function(cacheNames) {
+			return Promise.all(
+				cacheNames.filter(function(cacheName) {
+					return caches.delete(cacheName)
+				})
+			);
+		});
+	}
+	
+	function resetIndexedb(dbName) {
+		var deleteReq = indexedDB.deleteDatabase(dbName);
+
+		deleteReq.onsuccess= function(event) { 
+			console.log("Successfully deleted database!");
+			setTimeout(function() {
+				// setting false so it reloads from cache
+				// true from server
+				// this is not working, bug in chrome.
+				window.location.reload(false);
+			}, 1000);
+		};
+	}
+		
+		
+	function resetSW() {
+		navigator.serviceWorker.getRegistrations().then(function(registrations) {
+			for(var registration in registrations) {
+				var sw = registrations[registration];
+				sw.unregister().then(function(boolean) {
+					console.log("Deleted SW!");
+				});
+			}
+		});
+	}
 }
 
+	/* 
+		Examples:
+		resetSaved('indexedb', 'DEFERRED'); 
+		resetSaved('cache');
+		resetSaved('sw');
+ */
+	
   window.addEventListener('online', function(event) {
     sendToSW({command: "online", info: true});
     emptyQueue();
@@ -182,5 +194,4 @@ otherwise they provide an argument it will only clear whatevr argument they prov
     }
   }
 	
-	resetSaved('sw');  
 })();

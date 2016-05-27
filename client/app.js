@@ -15,3 +15,10 @@ skyport.cache([
 ]);
 
 // skyport.fallback("/messages");
+setTimeout(function() {
+	skyport.dynamic([
+		"./messages",
+		"/assets/vid3.mp4",
+		"/assets/vid1.mp4"							
+	]);
+}, 1000);
