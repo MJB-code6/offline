@@ -6,7 +6,7 @@ if (!window) {
 
   var precache, postcache;
 
-  caches.open('precache').then(function(cache) {
+  caches.open('sky-pre-precache').then(function(cache) {
     precache = cache;
   });
 
@@ -58,22 +58,22 @@ if (!window) {
     )
   });
 
+
   self.addEventListener('message', function(event) {
     var command = event.data.command;
 
     if (command === "cache" && navigator.onLine) {
       var items = event.data.info;
-      caches.open('precache')
+        caches.open('sky-pre-precache')
         .then(function(cache) {
           items.forEach(function(item) {
             cache.match(item).then(function(res) {
               if (!res) cache.add(item);
             }).catch(function(err) {console.log('error:', err)});
           });
-        })
-        .catch(function(err) {
+        }).catch(function(err) {
           console.log('error in precache', err);
-        });
+        })
     }
 
   	if(command === "fallback") {
@@ -86,8 +86,8 @@ if (!window) {
     if(command === 'dynamic') {
   		caches.open('postcache')
   	 		.then(function(cache) {
-  		 		return cache.add(event.data.info);
-  	 		})
+  		 		return cache.addAll(event.data.info);
+  	 		});
   	}
 
     if (command === "createDB" || command === "queue") {
@@ -169,30 +169,46 @@ if (window) {
         serviceWorker = registration.active || registration.waiting || registration.installing;
 
         //  This file should be included in the cache for offline use
-        skyport.cache(['/sw-one.js']);
+        caches.open('sky-pre-precache').then(function(cache) {
+          cache.add(['/sw-one.js']);
+        });
 
         //  Tell the service worker to create storage in indexedDB
         sendToSW({command: 'createDB', info: {domain: window.location.origin}});
       });
     }
 
+    // Used to control caching order
+    var staticStatus = false;
+    var dynamicSatus = false;
+    var staticData;
+    var dynamicData;
+
     //  Make useful functions available on the window object
     window.skyport =  window.skyport || {
 
       //  Use this function to add assets to cache for offline use
       cache: function(assets, fallback) {
-        console.log('cache args',arguments.callee.caller);
         if (!Array.isArray(assets)) assets = [assets];
-        sendToSW({
-          command: 'cache',
-          info: assets
-        });
+        staticData = assets;
+        staticStatus = true;
+        if(!dynamicSatus) {
+          sendToSW({
+            command: 'cache',
+            info: assets
+          }).then(function() {
+            sendToSW({
+              command: 'dynamic',
+              info: dynamicData
+            })
+          })
+        }
 
         if (fallback) {
           sendToSW({
-            command: 'fallback',
-            info: fallback
-          });
+                command: 'fallback',
+                info: fallback
+            });
         }
       },
 
@@ -204,11 +220,20 @@ if (window) {
         });
       },
 
-      dynamic: function(assets) {
-      	sendToSW({
-          command: 'dynamic',
-          info: assets
-        });
+      dynamic: function (assets) {
+        dynamicData = assets;
+        dynamicSatus = true;
+        if(!staticStatus) {
+          sendToSW({
+            command: 'dynamic',
+            info: assets
+          }).then(function() {
+            sendToSW({
+            command: 'cache',
+            info: staticData
+            })
+          });
+        }
       },
 
       //
@@ -225,6 +250,7 @@ if (window) {
         });
       }
     };
+
 
     window.addEventListener('online', function(event) {
       dequeue();
@@ -260,12 +286,18 @@ if (window) {
 
     function sendToSW(messageObj) {
       if (!serviceWorker) {
-        navigator.serviceWorker.oncontrollerchange = function() {
-          serviceWorker = navigator.serviceWorker.controller;
-          serviceWorker.postMessage(messageObj);
-        }
+        return new Promise(function(resolve, reject) {
+          navigator.serviceWorker.oncontrollerchange = function() {
+            serviceWorker = navigator.serviceWorker.controller;
+            serviceWorker.postMessage(messageObj);
+            resolve();
+          }
+        })
       } else {
-        serviceWorker.postMessage(messageObj);
+        return new Promise(function(resolve, reject) {
+          serviceWorker.postMessage(messageObj);
+          resolve();
+        })
       }
     }
   })();;
