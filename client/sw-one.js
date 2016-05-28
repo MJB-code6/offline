@@ -6,7 +6,7 @@ if (!window) {
 
   var precache, postcache;
 
-  caches.open('precache').then(function(cache) {
+  caches.open('sky-pre-precache').then(function(cache) {
     precache = cache;
   });
 
@@ -58,15 +58,14 @@ if (!window) {
     )
   });
 
+
   self.addEventListener('message', function(event) {
     var command = event.data.command;
 
     if (command === "cache" && navigator.onLine) {
-      console.log('listened to cache')
       var items = event.data.info;
-        caches.open('precache')
+        caches.open('sky-pre-precache')
         .then(function(cache) {
-          console.log('opened static')
           items.forEach(function(item) {
             cache.match(item).then(function(res) {
               if (!res) cache.add(item);
@@ -85,10 +84,8 @@ if (!window) {
   	}
 
     if(command === 'dynamic') {
-      console.log('listened to dynamic')
   		caches.open('postcache')
   	 		.then(function(cache) {
-          console.log('opened dynamic')
   		 		return cache.addAll(event.data.info);
   	 		});
   	}
@@ -172,7 +169,7 @@ if (window) {
         serviceWorker = registration.active || registration.waiting || registration.installing;
 
         //  This file should be included in the cache for offline use
-        caches.open('precache').then(function(cache) {
+        caches.open('sky-pre-precache').then(function(cache) {
           cache.add(['/sw-one.js']);
         });
 
@@ -196,7 +193,6 @@ if (window) {
         staticData = assets;
         staticStatus = true;
         if(!dynamicSatus) {
-          console.log('cache is running', dynamicData);
           sendToSW({
             command: 'cache',
             info: assets
@@ -228,12 +224,10 @@ if (window) {
         dynamicData = assets;
         dynamicSatus = true;
         if(!staticStatus) {
-          console.log('dynamic is running');
           sendToSW({
             command: 'dynamic',
             info: assets
           }).then(function() {
-            console.log(staticData);
             sendToSW({
             command: 'cache',
             info: staticData
