@@ -34,7 +34,7 @@ skyport.static('/assetList.json');
 
  *assetList.json:*  
  
- + JSON file should have 'version', 'static'(array), 'dynamic'(array), and fallback(optional) property.
+ + JSON file should have 'version', 'static'(array), 'dynamic'(array), and 'fallback'(optional) property.
  
 ```javascript
 {
