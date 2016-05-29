@@ -7,17 +7,17 @@
 * Optimize online web performance by reducing network requests.
 * Progressive web functionality.
 
-Skyport is a library designed to make it easier for developers to take full advantage of a powerful progressive web technology—Service Workers. As a proxy server that exists between the client and network, Service Workers have the potential to optimize web apps by reducing network requests, creating an offline-first experience so users can navigate your app even when they are offline, and even improve current online user experience.
+SkyPort is a library designed to make it easier for developers to take full advantage of a powerful progressive web technology—Service Workers. As a proxy server that exists between the client and network, Service Workers have the potential to optimize web apps by reducing network requests, creating an offline-first experience so users can navigate your app even when they are offline, and even improve current online user experience.
 
 #####So what's the problem with Service Workers?
 
-Service Workers are still a new and experimential technology, setup is long and tedious and understanding the Service Worker lifestyle can create a streneous development experience. Skyport is a library that simplifies setup, and provides developers flexibility and customization of their offline-first user experience.
+Service Workers are still a new and experimental technology, setup is long and tedious and understanding the Service Worker lifestyle can create a strenuous development experience. SkyPort is a library that simplifies setup, and provides developers flexibility and customization of their offline-first user experience.
 
 ## skyport.cache(*jsonFile*)
 
 > *Method must be in HTML file.*
 
-####Benefits:
+#####Benefits:
 
  1. Cache both static and dynamic assets with one method.
  2. Reduce network requests, optimize your app's web performance.
@@ -33,31 +33,34 @@ skyport.static('/assetList.json');
 ```    
 
  *assetList.json:*  
+ 
+ + JSON file should have 'version', 'static'(array), 'dynamic'(array), and fallback(optional) property.
+ 
 ```javascript
-	{
-		version: 1,
-		static: [
-    	'/index.html',
-      '/messages.html',
-      '/another-page.html',
-      '/style.css',
-      '/index.js',
-      '/assets/some-image.png',
-      '/assets/some-video.mp4'
-		],
-		dynamic: [
-		  '/messages',
-		  '/dynamicData.html'
-		],
-		fallback: '/fallback.html'
-	}
- ```
+{
+  version: 1,
+  static: [
+    '/index.html',
+    '/messages.html',
+    '/another-page.html',
+    '/style.css',
+    '/index.js',
+    '/assets/some-image.png',
+    '/assets/some-video.mp4'
+  ],
+  dynamic: [
+    '/messages',
+    '/dynamicData.html'
+  ],
+  fallback: '/fallback.html'
+}
+ ``` 
 
 ## skyport.static(*version number*, [*files*] / *jsonFile*)
 > *Method must be in HTML file.* 
 
-####Benefits:
-1. Useful for smaller apps that need to store static files only.
+#####Benefits:
+1. For smaller apps that need to cache static files only.
 2. Either include the JSON file and only static files will be cached or the files in an array with the version number.
 3. Improve web performance by reducing network requests.
 4. Optimize user experience as static files appear when user is offline.        
@@ -66,14 +69,14 @@ skyport.static('/assetList.json');
  *index.html:*  
 ```javascript
 skyport.static(1, [
-    	'/index.html',
-      '/messages.html',
-      '/another-page.html',
-      '/style.css',
-      '/index.js',
-      '/assets/some-image.png',
-      '/assets/some-video.mp4'
-		]);
+  '/index.html',
+  '/messages.html',
+  '/another-page.html',
+  '/style.css',
+  '/index.js',
+  '/assets/some-image.png',
+  '/assets/some-video.mp4'
+]);
 ```    
 
 ##### Method 2:
@@ -84,32 +87,33 @@ skyport.static('/assetList.json');
 
 *assetList.json:* 
 
- + only static files will be stored, the rest is ignored.
+ + only static files will be cached, the rest is ignored.
+ + JSON file should have 'version' and 'static'(array) properties.
 
 ```javascript
-	{
-		version: 1,
-		static: [
-    	'/index.html',
-      '/messages.html',
-      '/another-page.html',
-      '/style.css',
-      '/index.js',
-      '/assets/some-image.png',
-      '/assets/some-video.mp4'
-		],
-		dynamic: [
-		  '/messages',
-		  '/dynamicData.html'
-		],
-		fallback: '/fallback.html'
-	}
- ```
+{
+  version: 1,
+  static: [
+    '/index.html',
+    '/messages.html',
+    '/another-page.html',
+    '/style.css',
+    '/index.js',
+    '/assets/some-image.png',
+    '/assets/some-video.mp4'
+  ],
+  dynamic: [
+    '/messages',
+    '/dynamicData.html'
+  ],
+  fallback: '/fallback.html'
+}
+ ``` 
 
 ## skyport.dynamic([*files*] / *jsonFile*)
 
-####Benefits:
-1. Useful for smaller apps that need to store dynamic files only.
+#####Benefits:
+1. For smaller apps that need to cache dynamic files only.
 2. Either include the JSON file and only dynamic files will be cached or the files in an array.   
 
 ##### Method 1:
@@ -124,31 +128,32 @@ skyport.dynamic('/assetList.json');
 
 *assetList.json:* 
 
- + only dynamic files will be stored, the rest is ignored.
+ + only dynamic files will be cached, the rest is ignored.
+ + JSON file should have 'dynamic'(array) property to work.
 
 ```javascript
-	{
-		version: 1,
-		static: [
-    	'/index.html',
-      '/messages.html',
-      '/another-page.html',
-      '/style.css',
-      '/index.js',
-      '/assets/some-image.png',
-      '/assets/some-video.mp4'
-		],
-		dynamic: [
-		  '/messages',
-		  '/dynamicData.html'
-		],
-		fallback: '/fallback.html'
-	}
- ```
+{
+  version: 1,
+  static: [
+    '/index.html',
+    '/messages.html',
+    '/another-page.html',
+    '/style.css',
+    '/index.js',
+    '/assets/some-image.png',
+    '/assets/some-video.mp4'
+  ],
+  dynamic: [
+    '/messages',
+    '/dynamicData.html'
+  ],
+  fallback: '/fallback.html'
+}
+ ``` 
 
 ## skyport.direct(*fn*)
 
-####Benefits:
+#####Benefits:
 
 1. Function runs immediately if user is online, or queued if user is offline and synced when user is online again.
 2. Convenient for post requests and functions that can only run when user is online.
@@ -177,7 +182,7 @@ function sendMessage() {
 
 ## skyport.fallback(*fallback*)
 
-####Benefits:
+#####Benefits:
 1. When user is offline and assets they request are not in cache, custom fallback page will be served.
 2. Create a simple fallback page for users to see when your web app is offline.
  
@@ -187,7 +192,7 @@ skyport.fallback('/fallbackPage.html');
 
 ## skyport.reset()
 
-####Benefits:
+#####Benefits:
 1. During development making resetting the cache easy.
 2. Resetting indexedb useful when using *skyport.direct()* method.
 3. Easily delete current Service Worker.
@@ -204,4 +209,4 @@ skyport.reset('sw') // deletes current Service Worker
 ### License
 MIT License (MIT)
 
-Copyright (c) Team Skyport (Brandon, Masha, Joe)
+Copyright (c) Team SkyPort (Brandon, Masha, Joe)
