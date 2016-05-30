@@ -5,7 +5,19 @@ var window;
 if (!window) {
   console.log('registration scope',registration.scope);
   console.log('swgs', this);
-  var precache, postcache, fallback;
+
+  var precache = precache || caches.open('sky-static').then(function(cache) {
+    return cache;
+  });
+
+  var postcache = postcache || caches.open('sky-dynamic').then(function(cache) {
+    return cache;
+  })
+
+  var fallback = fallback || caches.open('sky-fallback').then(function(cache) {
+    return cache;
+  })
+
   var fallbackURL = registration.scope;
 
   self.addEventListener('install', function(event) {
@@ -393,7 +405,7 @@ if (window) {
         });
       },
 
-      reset: function() 
+      reset: function() {
     		var args = Array.prototype.slice.call(arguments);
 
     		if(args.length === 0) {

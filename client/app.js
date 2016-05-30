@@ -1,5 +1,5 @@
 console.log('start of app.js')
-skyport.cache([
+skyport.static(3, [
   "/",
   "/index.html",
   "/feature.html",
@@ -17,7 +17,7 @@ skyport.cache([
   // "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-alpha1/jquery.min.js"
 ]);
 
-setTimeout(function(){skyport.dynamic(["/messages"])}, 1000);
+skyport.dynamic(["/messages"]);
 
 // caches.keys().then(function(keylist) {
 //   keylist.forEach(function(key) {
