@@ -65,8 +65,8 @@ if (!window) {
     )
   });
 
+
   self.addEventListener('message', function(event) {
-    console.log('heard a message', event.data, 'at', Date.now());
     var command = event.data.command;
     var info = event.data.info;
 
@@ -268,7 +268,7 @@ if (!window) {
               if (newItems.indexOf(key.url.replace(registration.scope, '')) < 0) {
                 cache.delete(key);
                 console.log('deleting from cache', key.url);
-              }              
+              }
             })
           })
         })
@@ -301,6 +301,12 @@ if (window) {
         skyport.dynamic(['/sw-one.js']);
       });
     }
+
+    // Used to control caching order
+    var staticStatus = false;
+    var dynamicSatus = false;
+    var staticData;
+    var dynamicData;
 
     //  Make useful functions available on the window object
     window.skyport =  window.skyport || {
@@ -470,6 +476,7 @@ if (window) {
       }
     };
 
+
     window.addEventListener('online', function(event) {
       dequeue();
     });
@@ -481,6 +488,7 @@ if (window) {
     window.addEventListener('load', function(event) {
       console.log('window loaded')
     });
+
 
     function dequeue() {
       var openRequest = indexedDB.open('skyport', 1);
