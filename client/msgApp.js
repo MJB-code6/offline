@@ -27,7 +27,7 @@ function renderMessages(messages) {
 
 function sendMessage(value) {
   var obj = prepareMessage();
-  skyport.sendOrQueue(obj, function(obj){
+  skyport.direct(obj, function(obj){
     $.ajax({
       type: 'POST',
       data: JSON.stringify(obj),
@@ -52,3 +52,5 @@ function prepareMessage() {
   }
   return obj;
 }
+
+console.log('end of msgApp.js');

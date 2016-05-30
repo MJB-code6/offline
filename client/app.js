@@ -3,7 +3,7 @@ skyport.cache([
   "/",
   "/index.html",
   "/feature.html",
-  "/app.js",
+  // "/app.js",
   "/msgApp.js",
   "/style.css",
   "/assets/vid1.mp4",
@@ -18,3 +18,29 @@ skyport.cache([
 ]);
 
 setTimeout(function(){skyport.dynamic(["/messages"])}, 1000);
+
+// caches.keys().then(function(keylist) {
+//   keylist.forEach(function(key) {
+//     caches.open(key).then(function(cache) {
+//       cache.match('/assets/birdy1.jpg').then(function(response) {
+//         console.log('found', response);
+//       }).catch(function(error) {
+//         console.log('error', error);
+//       })
+//     })
+//   })
+// })
+//
+// caches.keys().then(function(keylist) {
+//   keylist.filter(function(key) {
+//     return /^sky-pre/.test(key)
+//   }).forEach(function(key) {
+//     caches.open(key).then(function(cache) {
+//       cache.match('/assets/birdy1.jpg').then(function(response) {
+//         console.log('found', response);
+//       }).catch(function(error) {
+//         console.log('error', error);
+//       })
+//     })
+//   })
+// })
