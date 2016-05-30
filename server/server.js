@@ -8,7 +8,9 @@ const messageController = require('./messages/messageController');
 app.use(bodyParser.json());
 
 app.use(function(req, res, next) {
-  console.log('on server, req is', req.url);
+  if (req.url !== '/messages' || req.url !== 'GET') {
+    console.log(req.url + ':', req.headers.referer);
+  }
   next();
 });
 

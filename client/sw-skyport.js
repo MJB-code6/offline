@@ -7,13 +7,7 @@ var precacheAssets = precacheAssets || [];
 var dynamic;
 var static;
 var dynamicAssets = dynamicAssets || {};
-
-caches.open(FALLBACK_CACHE).then(function(cache) {
-  dynamic = cache;
-});
-caches.open(CACHE_FIRST).then(function(cache) {
-  static = cache;
-});
+var blob;
 
 self.addEventListener('install', function(event) {
   return self.skipWaiting();
@@ -24,6 +18,42 @@ self.addEventListener('activate', function(event) {
 });
 
 self.addEventListener('fetch', function(event) {
+
+  if(event.request.url.endsWith('.mp4')) {
+    fetch(event.request.clone())
+    .then(function(netRes) {
+       return netRes.blob();
+    }).then(function(res) {
+      var req = indexedDB.open('videoFile', 1);
+
+      req.onupgradeneeded = function (event) {
+        db = event.target.result;
+        var objectStore = db.createObjectStore("videos", {keyPath: "url"});
+      }
+
+      req.onsuccess = function(e) {
+        db = e.target.result;
+          var vidObjectStore = db.transaction(["videos"], "readwrite").objectStore("videos");
+          vidObjectStore.add({'url': event.request.url, 'content': res});
+      }
+    }).then(function() {
+      var vidReq = indexedDB.open('videoFile', 1);
+      vidReq.onsuccess = function(evt) {
+        db = evt.target.result;
+        var videoDB = db.transaction(["videos"]).objectStore("videos");
+        var getVideo = videoDB.get(event.request.url);
+
+        getVideo.onsuccess = function(e) {
+          blob = getVideo.result.content;
+        }
+      }
+    })
+  }
+
+  caches.open(FALLBACK_CACHE).then(function(cache) {
+    dynamic = cache;
+  });
+
   event.respondWith(
     caches.open(CACHE_FIRST).then(function(cache) {
       return cache.match(event.request.clone())
@@ -39,7 +69,9 @@ self.addEventListener('fetch', function(event) {
           .catch(function() {
             return dynamic.match(event.request)
             .then(function(response) {
-              return response;
+              // return response;
+              var init = {"type": "basic", "status": 200, "statusText": "let's try"};
+              return new Response(blob, init);
             })
           })
       })
