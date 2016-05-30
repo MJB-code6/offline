@@ -12,12 +12,13 @@ if (!window) {
 
   var postcache = postcache || caches.open('sky-dynamic').then(function(cache) {
     return cache;
-  })
+  });
 
   var fallback = fallback || caches.open('sky-fallback').then(function(cache) {
     return cache;
-  })
+  });
 
+  var cacheOpen;
   var fallbackURL = registration.scope;
 
   self.addEventListener('install', function(event) {
@@ -65,6 +66,7 @@ if (!window) {
   });
 
   self.addEventListener('message', function(event) {
+    console.log('heard a message', event.data, 'at', Date.now());
     var command = event.data.command;
     var info = event.data.info;
 
@@ -163,12 +165,6 @@ if (!window) {
       fallbackURL += info.fileRoute.slice(info.fileRoute.indexOf(
         info.fileRoute.match(/\w/)));
       addToCache('fallback', [info.fileRoute])
-      // caches.open('sky-fallback').then(function(cache) {
-      //   cache.add('info.fileRoute').then(function(response) {
-      //     if (response) fallback = true;
-      //     else fallback = false;
-      //   })
-      // })
   	}
 
     if (command === "queue") {
@@ -227,22 +223,25 @@ if (!window) {
     };
   }
 
-  function addToCache(type, itemsToAdd, version) { //(cacheName, version, itemsToAdd) {
+  function addToCache(type, itemsToAdd, version) {
     var cacheName = 'sky-' + type;
     if (version) cacheName += '-v' + version;
     caches.open(cacheName).then(function(cache) {
       if (type === 'static') {
+        if (precache) caches.delete('sky-static');
         precache = cache;
-        itemsToAdd.forEach(function(item) {
+        itemsToAdd.forEach(function(item, i) {
           cache.match(item).then(function(response) {
             if (!response) cache.add(item);
           })
         })
+        cleanCache(itemsToAdd);
       }
       else {
         if (type === 'dynamic') postcache = cache;
         if (type === 'fallback') fallback = cache;
-        cache.addAll(itemsToAdd);
+        cache.addAll(itemsToAdd).then(function() {
+        });
       }
     }).catch(function(err) {
       console.log('error in addToCache', err);
@@ -253,16 +252,26 @@ if (!window) {
 
   }
 
-  function cleanCache(cache, newItems) {
+  function cleanCache(newItems) {
     //  TODO: collect list of current keys in cache. check each key against
     //  new cache array and remove from cache if not found
-    cache.keys().then(function(keylist) {
+    caches.keys().then(function(keylist) {
       console.log('newItems', newItems);
-      keylist.forEach(function(key) {
-        if (newItems.indexOf(key.url.replace(registration.scope, '')) < 0) {
-          cache.delete(key);
-          console.log('deleting from cache', key.url);
-        }
+      keylist.filter(function(key) {
+        return /^sky-static/.test(key);
+      }).forEach(function(cacheName) {
+        console.log('cacheName', cacheName);
+        caches.open(cacheName).then(function(cache) {
+          console.log('cache', cache);
+          cache.keys().then(function(keylist) {
+            keylist.forEach(function(key) {
+              if (newItems.indexOf(key.url.replace(registration.scope, '')) < 0) {
+                cache.delete(key);
+                console.log('deleting from cache', key.url);
+              }              
+            })
+          })
+        })
       })
     }).then(function() {
       console.log('old cache items should have been deleted')
@@ -498,15 +507,24 @@ if (window) {
       }
     }
 
+    var messageQueue = messageQueue || [];
 
     function sendToSW(messageObj) {
+      messageQueue.push(messageObj);
+
       if (!serviceWorker) {
         navigator.serviceWorker.oncontrollerchange = function() {
           serviceWorker = navigator.serviceWorker.controller;
-          serviceWorker.postMessage(messageObj);
+          sendQueue();
         }
       } else {
-        serviceWorker.postMessage(messageObj);
+        sendQueue();
+      }
+
+      function sendQueue() {
+        while (messageQueue.length) {
+          serviceWorker.postMessage(messageQueue.shift());
+        }
       }
     }
   })();;
