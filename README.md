@@ -11,11 +11,16 @@ SkyPort is a library designed to make it easier for developers to take full adva
 
 #####So what's the problem with Service Workers?
 
-Service Workers are still a new and experimental technology, setup is long and tedious and understanding the Service Worker lifestyle can create a strenuous development experience. SkyPort is a library that simplifies setup, and provides developers flexibility and customization of their offline-first user experience.
+Service Workers are still a new and experimental technology, setup is long and tedious and understanding the Service Worker lifecycle can create a strenuous development experience. SkyPort is a library that simplifies setup, and provides developers flexibility and customization of their offline-first user experience.
+
+# Getting Started
+
+1. Fork and clone this repo.
+2. Apply these methods.
 
 ## skyport.cache(*jsonFile*)
 
-> *Method must be in HTML file.*
+> *Include in file that you won’t cache, like index.html.*
 
 #####Benefits:
 
@@ -34,7 +39,7 @@ skyport.static('/assetList.json');
 
  *assetList.json:*  
  
- + JSON file should have 'version', 'static'(array), 'dynamic'(array), and 'fallback'(optional) property.
+ + In this example, the static cache, the dynamic cache and the fallback page are all included in the JSON file—include only what you are using. **For example if you are only static assets, include the version number and the static property with the list of assets you want to store in the static cache.
  
 ```javascript
 {
@@ -56,8 +61,8 @@ skyport.static('/assetList.json');
 }
  ``` 
 
-## skyport.static(*version number*, [*files*] / *jsonFile*)
-> *Method must be in HTML file.* 
+## skyport.static(*jsonFile* / *versionNum*, [*files*] )
+> *Include in file that you won’t cache, like index.html.*
 
 #####Benefits:
 1. For smaller apps that need to cache static files only.
@@ -110,7 +115,7 @@ skyport.static('/assetList.json');
 }
  ``` 
 
-## skyport.dynamic([*files*] / *jsonFile*)
+## skyport.dynamic(*jsonFile* / [*files*])
 
 #####Benefits:
 1. For smaller apps that need to cache dynamic files only.
@@ -151,7 +156,7 @@ skyport.dynamic('/assetList.json');
 }
  ``` 
 
-## skyport.direct(*fn*)
+## skyport.direct(*data, callback*)
 
 #####Benefits:
 
