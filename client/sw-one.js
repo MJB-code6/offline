@@ -6,6 +6,7 @@ if (!window) {
   console.log('registration scope',registration.scope);
   console.log('swgs', this);
 
+//three variables bellow are declared for accessing caches
   var precache = precache || caches.open('sky-static').then(function(cache) {
     return cache;
   });
@@ -21,35 +22,47 @@ if (!window) {
   var cacheOpen;
   var fallbackURL = registration.scope;
 
+//skipWaiting within install listenner allows waiting service worker become active
   self.addEventListener('install', function(event) {
     console.log('sw installing');
     console.log(new Date(Date.now()));
     return self.skipWaiting();
   });
 
+//runIDB runs initially in the listenner to create objectstore in indexedDB
   self.addEventListener('activate', function(event) {
     runIDB();
     event.waitUntil(self.clients.claim());
   });
 
+//within the fetch listenner is the caching system that controls the interaction
+//between client and server
   self.addEventListener('fetch', function(event) {
     event.respondWith(
       precache.match(event.request).then(function(response) {
         if(response) {
+          //if requested data is found in static cache, serve the asset to the client
           return response;
         } else if (navigator.onLine) {
+          //if requested data is not found in static cache AND there is network connection
+          //request data from the server
           return fetch(event.request/*.clone()*/).then(function(netRes) {
+            //looks for dynamic cache to check wether data is considered dynamic
               return postcache.match(event.request).then(function(response) {
+                //if the request is dynamic data, update cache
                 if (response && event.request.method === 'GET') {
                   postcache.put(event.request, netRes)
                 }
+                //send response from the network to the client
                 return netRes;
               }).catch(function(err) {console.log('postcache match error', err)})
           }).catch(function(err) {console.log('server match error', err)})
-        } else {
+        } else { //if there is no network connection AND requested data is not
+                //found in static cache, serve data from dynamic cache
             return postcache.match(event.request).then(function(response) {
               if (response) return response;
               else if (/\.html$/.test(event.request.url)) {
+                //if no match found from dynamic, serve the fallback page
                 console.log('fburl', fallbackURL);
                 return fallback.match(fallbackURL).then(function(response) {
                   return response;
@@ -66,13 +79,15 @@ if (!window) {
   });
 
 
+//Message event listenner receives any message passed from the window scope using sendToSW function
   self.addEventListener('message', function(event) {
     var command = event.data.command;
-    var info = event.data.info;
+    var info = event.data.info; //the provided data coming from window scope
 
     if (command === "cacheJSON" && navigator.onLine) {
+      //requesting the json file using the provided route
       return fetch(info.fileRoute).then(function(response) {
-        return response.json()
+        return response.json();
       })
       .then(function(parsedFile) {
         console.log('parsedFile', parsedFile);
@@ -86,6 +101,7 @@ if (!window) {
             return;
           }
 
+          //check if static assets are provided in the json file
           if (parsedFile.static) {
             if (!Array.isArray(parsedFile.static)) {
               console.error('(SkyPort) Error: static assets must be an array');
@@ -99,6 +115,7 @@ if (!window) {
             addToCache('static', parsedFile.static, parsedFile.version);
           }
 
+          //check if dynamic file is provided in the json file
           if (parsedFile.dynamic) {
             if (!Array.isArray(parsedFile.dynamic)) {
               console.error('(SkyPort) Error: dynamic assets must be an array');
@@ -107,6 +124,7 @@ if (!window) {
             addToCache('dynamic', parsedFile.dynamic);
           }
 
+          //check if fallback page is provided in the json file
           if (parsedFile.fallback) {
             fallbackURL += parsedFile.fallback.slice(parsedFile.fallback.indexOf(
               parsedFile.fallback.match(/\w/)));
@@ -116,6 +134,7 @@ if (!window) {
 
         else if (info.cacheType === 'static') {
           if (!parsedFile.static) {
+            //checking valid input
             if (!parsedFile.assets) {
               console.error('(SkyPort) Error: JSON file passed to static ' +
                 'function must have a \'static\' field');
@@ -124,6 +143,7 @@ if (!window) {
             parsedFile.static = parsedFile.assets;
           }
 
+          //checking valid input
           if (!Array.isArray(parsedFile.static)) {
             console.error('(SkyPort) Error: static assets must be an array');
             return;
@@ -223,9 +243,11 @@ if (!window) {
     };
   }
 
+//updates the static/dynamic cache
   function addToCache(type, itemsToAdd, version) {
     var cacheName = 'sky-' + type;
     if (version) cacheName += '-v' + version;
+    //open or create cache with the given name and version
     caches.open(cacheName).then(function(cache) {
       if (type === 'static') {
         if (precache) caches.delete('sky-static');
@@ -407,7 +429,8 @@ if (window) {
       },
 
 
-      //
+      //either call deferredFunc when there is network connect or call sendToSW when offline
+      //the command: queue triggers listenner in the other scope to queue function in indexeddb
       direct: function(dataObj, deferredFunc) {
         if (navigator.onLine) return deferredFunc(dataObj);
         if (typeof(deferredFunc) !== "function") return;
@@ -515,8 +538,11 @@ if (window) {
       }
     }
 
+//array for putting postMessage into queue
     var messageQueue = messageQueue || [];
 
+
+//put object that contains file paths to the message queue
     function sendToSW(messageObj) {
       messageQueue.push(messageObj);
 
