@@ -3,8 +3,6 @@ var window;
   The code below runs in the service worker global scope
 */
 if (!window) {
-  console.log('registration scope',registration.scope);
-  console.log('swgs', this);
 
   var precache = precache || caches.open('sky-static').then(function(cache) {
     return cache;
@@ -22,8 +20,6 @@ if (!window) {
   var fallbackURL = registration.scope;
 
   self.addEventListener('install', function(event) {
-    console.log('sw installing');
-    console.log(new Date(Date.now()));
     return self.skipWaiting();
   });
 
@@ -50,7 +46,6 @@ if (!window) {
             return postcache.match(event.request).then(function(response) {
               if (response) return response;
               else if (/\.html$/.test(event.request.url)) {
-                console.log('fburl', fallbackURL);
                 return fallback.match(fallbackURL).then(function(response) {
                   return response;
                 }).catch(function(err) {console.log('fallback match error', err)})
@@ -75,8 +70,6 @@ if (!window) {
         return response.json()
       })
       .then(function(parsedFile) {
-        console.log('parsedFile', parsedFile);
-        console.log('info', info);
         if (info.cacheType === 'cache') {
 
           if (!parsedFile.static && !parsedFile.dynamic && !parsedFile.fallback) {
@@ -253,29 +246,21 @@ if (!window) {
   }
 
   function cleanCache(newItems) {
-    //  TODO: collect list of current keys in cache. check each key against
-    //  new cache array and remove from cache if not found
     caches.keys().then(function(keylist) {
-      console.log('newItems', newItems);
       keylist.filter(function(key) {
         return /^sky-static/.test(key);
       }).forEach(function(cacheName) {
-        console.log('cacheName', cacheName);
         caches.open(cacheName).then(function(cache) {
-          console.log('cache', cache);
           cache.keys().then(function(keylist) {
             keylist.forEach(function(key) {
               if (newItems.indexOf(key.url.replace(registration.scope, '')) < 0) {
                 cache.delete(key);
-                console.log('deleting from cache', key.url);
               }
             })
           })
         })
       })
-    }).then(function() {
-      console.log('old cache items should have been deleted')
-    }).catch(function(err) { console.log('there was an error in cleanCache', err)});
+    })
   }
 }
 
@@ -286,7 +271,6 @@ if (!window) {
 if (window) {
 
   (function() {
-    console.log('iife is running');
     //  Service Workers are not (yet) supported by all browsers
     if (!navigator.serviceWorker) return;
 
@@ -535,5 +519,5 @@ if (window) {
         }
       }
     }
-  })();;
+  })();
 }

@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/ranmizu/offline#readme",
   "devDependencies": {
+    "eslint": "^2.11.1",
     "nodemon": "^1.9.2"
   },
   "dependencies": {
