@@ -3,286 +3,193 @@ var window;
   The code below runs in the service worker global scope
 */
 if (!window) {
-<<<<<<< HEAD
-  var db;
-  var online = true;
-  var precache, postcache;
+  console.log('registration scope',registration.scope);
   console.log('swgs', this);
-=======
 
-  var precache, postcache;
->>>>>>> 825d68fd7db363816d6ae1040ea823de5c8bc085
-
-  caches.open('precache').then(function(cache) {
-    precache = cache;
+  var precache = precache || caches.open('sky-static').then(function(cache) {
+    return cache;
   });
 
-  caches.open('postcache').then(function(cache) {
-    postcache = cache;
+  var postcache = postcache || caches.open('sky-dynamic').then(function(cache) {
+    return cache;
   });
+
+  var fallback = fallback || caches.open('sky-fallback').then(function(cache) {
+    return cache;
+  });
+
+  var cacheOpen;
+  var fallbackURL = registration.scope;
 
   self.addEventListener('install', function(event) {
     console.log('sw installing');
+    console.log(new Date(Date.now()));
     return self.skipWaiting();
   });
 
   self.addEventListener('activate', function(event) {
-    console.log('sw activating');
+    runIDB();
     event.waitUntil(self.clients.claim());
   });
 
   self.addEventListener('fetch', function(event) {
-<<<<<<< HEAD
-    if (event.request.method === 'POST' || event.request.url !== 'http://localhost:3000/messages') {
-      console.log('about to fetch:', event.request.url);
-    }
     event.respondWith(
-      precache.match(event.request.clone())
-        .then(function(response) {
-          if(response) {
-            console.log('returning precache response');
-            return response;
-          } else if (online) {
-            return fetch(event.request.clone())
-              .then(function(netRes) {
-                return caches.open('postcache').then(function(cache) {
-                  return cache.match(event.request.clone()).then(function(response) {
-                    if (response && event.request.method === 'GET') {
-                      console.log('putting something into postcache');
-                      cache.put(event.request.clone(), netRes.clone());
-                    }
-                    console.log('returning net response');
-=======
-    event.respondWith(
-      precache.match(event.request.clone()).then(function(response) {
-          if(response) {
-            return response;
-          } else if (navigator.onLine) {
-            return fetch(event.request.clone()).then(function(netRes) {
-                return caches.open('postcache').then(function(cache) {
-                  return cache.match(event.request.clone()).then(function(response) {
-                    if (response && event.request.method === 'GET') {
-                      cache.put(event.request.clone(), netRes.clone());
-                    }
->>>>>>> 825d68fd7db363816d6ae1040ea823de5c8bc085
-                    return netRes;
-                  })
-                })
-              })
-              .catch(function() {
-                return caches.open('postcache').then(function(cache) {
-                  return cache.match(event.request.clone()).then(function(response) {
-                    return response;
-                  });
-                });
-              });
-            } else {
-              return caches.open('postcache').then(function(cache) {
-                return cache.match(event.request.clone()).then(function(response) {
+      precache.match(event.request).then(function(response) {
+        if(response) {
+          return response;
+        } else if (navigator.onLine) {
+          return fetch(event.request/*.clone()*/).then(function(netRes) {
+              return postcache.match(event.request).then(function(response) {
+                if (response && event.request.method === 'GET') {
+                  postcache.put(event.request, netRes)
+                }
+                return netRes;
+              }).catch(function(err) {console.log('postcache match error', err)})
+          }).catch(function(err) {console.log('server match error', err)})
+        } else {
+            return postcache.match(event.request).then(function(response) {
+              if (response) return response;
+              else if (/\.html$/.test(event.request.url)) {
+                console.log('fburl', fallbackURL);
+                return fallback.match(fallbackURL).then(function(response) {
                   return response;
-                });
-              });
-            }
-        })
+                }).catch(function(err) {console.log('fallback match error', err)})
+              }
+              else {
+                console.log('(SkyPort) Error: a resource ', event.request.url,
+                  ' was not found in cache');
+              }
+            }).catch(function(err) { console.log('caught after postcache match', err)});
+        }
+      })
     )
   });
 
+
   self.addEventListener('message', function(event) {
     var command = event.data.command;
-<<<<<<< HEAD
-    console.log('heard a message', command);
+    var info = event.data.info;
 
-    if (command === "cache" && online) {
-      var items = event.data.info;
-      console.log('heard a message to cache', event.data.info)
-=======
+    if (command === "cacheJSON" && navigator.onLine) {
+      return fetch(info.fileRoute).then(function(response) {
+        return response.json()
+      })
+      .then(function(parsedFile) {
+        console.log('parsedFile', parsedFile);
+        console.log('info', info);
+        if (info.cacheType === 'cache') {
 
-    if (command === "cache" && navigator.onLine) {
-      var items = event.data.info;
->>>>>>> 825d68fd7db363816d6ae1040ea823de5c8bc085
-      caches.open('precache')
-        .then(function(cache) {
-          items.forEach(function(item) {
-            cache.match(item).then(function(res) {
-              if (!res) cache.add(item);
-<<<<<<< HEAD
-              else console.log('res header', res.headers)
-            }).catch(function(err) {console.log('error:', err)});
-          });
-        }).then(function() {
-					checkPrecache();
-				})
-=======
-            }).catch(function(err) {console.log('error:', err)});
-          });
-        })
->>>>>>> 825d68fd7db363816d6ae1040ea823de5c8bc085
-        .catch(function(err) {
-          console.log('error in precache', err);
-        });
+          if (!parsedFile.static && !parsedFile.dynamic && !parsedFile.fallback) {
+            console.error('(SkyPort) Error: JSON file passed to \'cache\' ' +
+              'function must have at least one of the following fields: ' +
+              '\'static\', \'dynamic\', \'fallback\'');
+            return;
+          }
+
+          if (parsedFile.static) {
+            if (!Array.isArray(parsedFile.static)) {
+              console.error('(SkyPort) Error: static assets must be an array');
+              return;
+            }
+            if (!parsedFile.version) {
+              console.error('(SkyPort) Error: JSON files with static assets ' +
+                'must include a version field (number or string)');
+              return;
+            }
+            addToCache('static', parsedFile.static, parsedFile.version);
+          }
+
+          if (parsedFile.dynamic) {
+            if (!Array.isArray(parsedFile.dynamic)) {
+              console.error('(SkyPort) Error: dynamic assets must be an array');
+              return;
+            }
+            addToCache('dynamic', parsedFile.dynamic);
+          }
+
+          if (parsedFile.fallback) {
+            fallbackURL += parsedFile.fallback.slice(parsedFile.fallback.indexOf(
+              parsedFile.fallback.match(/\w/)));
+            addToCache('fallback', [parsedFile.fallback]);
+          }
+        }
+
+        else if (info.cacheType === 'static') {
+          if (!parsedFile.static) {
+            if (!parsedFile.assets) {
+              console.error('(SkyPort) Error: JSON file passed to static ' +
+                'function must have a \'static\' field');
+              return;
+            }
+            parsedFile.static = parsedFile.assets;
+          }
+
+          if (!Array.isArray(parsedFile.static)) {
+            console.error('(SkyPort) Error: static assets must be an array');
+            return;
+          }
+          if (!parsedFile.version) {
+            console.error('(SkyPort) Error: JSON files with static assets ' +
+              'must include a version field (number or string)');
+            return;
+          }
+          addToCache('static', parsedFile.static, parsedFile.version);
+        }
+
+        else if (info.cacheType === 'dynamic') {
+          if (!parsedFile.dynamic) {
+            if (!parsedFile.assets) {
+              console.error('(SkyPort) Error: JSON file passed to dynamic ' +
+                'function must have a \'dynamic\' field');
+              return;
+            }
+            parsedFile.dynamic = parsedFile.assets;
+          }
+
+          if (!Array.isArray(parsedFile.dynamic)) {
+            console.error('(SkyPort) Error: dynamic assets must be an array');
+            return;
+          }
+          addToCache('dynamic', parsedFile.dynamic);
+        }
+        return;
+      });
     }
 
-<<<<<<< HEAD
-		if(command === "fallback") {
-=======
+
+    if (command === "cacheArray" && navigator.onLine) {
+      addToCache(info.cacheType, info.assets, info.version || null);
+    }
+
   	if(command === "fallback") {
->>>>>>> 825d68fd7db363816d6ae1040ea823de5c8bc085
-  		caches.open('fallback')
-  	 		.then(function(cache) {
-  		 		return cache.add(event.data.info);
-  	 		})
+      fallbackURL += info.fileRoute.slice(info.fileRoute.indexOf(
+        info.fileRoute.match(/\w/)));
+      addToCache('fallback', [info.fileRoute])
   	}
 
-    if(command === 'dynamic') {
-<<<<<<< HEAD
-			var items = event.data.info;
-  		caches.open('postcache')
-      	.then(function(cache) {
-          items.forEach(function(item) {
-            cache.match(item).then(function(res) {
-              if (!res) cache.add(item);
-              else console.log('res header', res.headers)
-            }).catch(function(err) {console.log('error:', err)});
-          });
-        }).then(function() {
-					checkPostcache();
-				}).catch(function(err) {
-          console.log('error in postcache', err);
-				})
-  	}
-
-		function checkPostcache() { 
-			postcache.keys().then(function(cachedFiles) {
-				caches.open('postcache').then(function(cache) {
-					cachedFiles.forEach(function(file) {
-						cache.match(file.url).then(function(res) {
-							if(res.status === 200 && res.statusText === "OK"){
-								console.log("GOOD POSTCACHE");
-							}else {
-								console.log("NOT SO GOOD POSTCACHE!", "resStatus: ", res, res.status, "resStatusText: ", res.statusText);
-								
-								var headers = new Headers();
-								headers.set('Status-Code', 200);
-								
-								var request = new Request(file.url, {headers: headers});
-								
-								fetch(request).then(function(resp) {
-									console.log(resp.headers);
-									console.log("AFTER POST CACHE FETCH", resp)
-									console.log(resp);
-									return cache.put(file.url, resp)
-								})
-								
-//								return cache.add(file.url);
-							}
-						}).catch(function(err) {console.log('error:', err)})
-					})
-				})
-			});
-		}
-		
-		function checkPrecache() { 
-			precache.keys().then(function(cachedFiles) {
-				caches.open('precache').then(function(cache) {
-					cachedFiles.forEach(function(file) {
-						cache.match(file.url).then(function(res) {
-							if(res.status === 200 && res.statusText === "OK"){
-								console.log("GOOD PRECACHE");
-							}else if(res.status === 206 && res.statusText === "Partial Content") {
-								console.log("PARTIAL CONTENT!", res.status, res.statusText);
-								console.log(res);							
-							var request = new Request(file.url);
-								
-								fetch(request).then(function(resp) {
-									console.log("AFTER PRE CACHE FETCH", resp)
-									console.log(resp);
-									return cache.put(file.url, resp)
-								})
-								//return cache.add(file.url);
-							}else {
-								console.log("NOT SO GOOD PRECACHE!", "resStatus: ", res.status, "resStatusText: ", res.statusText);
-								
-								var request = new Request(file.url);
-								
-								fetch(request).then(function(resp) {
-									console.log("AFTER PRE CACHE FETCH", resp)
-									console.log(resp);
-									return cache.put(file.url, resp)
-								})
-							}
-						})
-					})
-				})
-			});
-		}
-
-    if (command === "online") {
-      if (event.data.info === false) {
-        precache.keys().then(function(keylist) {
-          keylist.forEach(function(req) {
-            console.log('precache req headers', req.headers);
-          });
-        });
-      }
-      online = event.data.info;
+    if (command === "queue") {
+      runIDB(event.data);
     }
-
-    if (command === "createDB" || command === "queue") {
-      getIDB(event.data);
-      // console.log('in createdb, getIDB returned', objectStore);
-      // objectStore.add({domain: event.data.info, requests: []});
-    }
-
-    // if (command === 'dequeue') {
-    //   getIDB(event.data);
-    // }
-
-=======
-  		caches.open('postcache')
-  	 		.then(function(cache) {
-  		 		return cache.add(event.data.info);
-  	 		})
-  	}
-
-    if (command === "createDB" || command === "queue") {
-      getIDB(event.data);
-    }
->>>>>>> 825d68fd7db363816d6ae1040ea823de5c8bc085
   });
 
-  function getIDB(data) {
-    var openRequest = indexedDB.open('DEFERRED', 1);
+  function runIDB(data) {
+    var openRequest = indexedDB.open('skyport', 1);
 
     openRequest.onupgradeneeded = function(e) {
       db = e.target.result;
-      var objectStore = db.createObjectStore("deferredRequests", { keyPath: "domain" });
-<<<<<<< HEAD
-      console.log('in upgradeneeded, db is', db);
-=======
->>>>>>> 825d68fd7db363816d6ae1040ea823de5c8bc085
+      var objectStore = db.createObjectStore("redirected", { keyPath: "domain" });
     };
 
     openRequest.onsuccess = function(e) {
       db = e.target.result;
-      var objectStore = db.transaction("deferredRequests", "readwrite").objectStore("deferredRequests");
-<<<<<<< HEAD
-      console.log('in onsuccess, db is', db);
+      var objectStore = db.transaction("redirected", "readwrite").objectStore("redirected");
 
-      if (data.command === 'createDB') {
-        console.log('in createDB');
-        objectStore.add({domain: data.info.domain, requests: []});
-      }
-      else if (data.command === 'queue') {
-        console.log('in queue');
-=======
-
-      if (data.command === 'createDB') {
-        objectStore.add({domain: data.info.domain, requests: []});
+      if (!data) {
+        objectStore.add({domain: registration.scope, requests: []});
       }
 
       else if (data.command === 'queue') {
->>>>>>> 825d68fd7db363816d6ae1040ea823de5c8bc085
-        var retrieveRequest = objectStore.get(data.info.domain);
+        var retrieveRequest = objectStore.get(registration.scope);
 
         retrieveRequest.onsuccess = function(e) {
           // Get the old value that we want to update
@@ -295,15 +202,12 @@ if (!window) {
           });
 
           // Put this updated object back into the database.
-          var requestUpdate = objectStore.put({domain: data.info.domain, requests: deferredQueue});
+          var requestUpdate = objectStore.put({domain: registration.scope, requests: deferredQueue});
         };
       }
-<<<<<<< HEAD
-=======
 
->>>>>>> 825d68fd7db363816d6ae1040ea823de5c8bc085
       else if (data.command === 'dequeue') {
-        var retrieveRequest = objectStore.get(data.info.domain);
+        var retrieveRequest = objectStore.get(registration.scope);
 
         retrieveRequest.onsuccess = function(event) {
           var deferredQueue = retrieveRequest.result["requests"];
@@ -312,249 +216,324 @@ if (!window) {
             var nextRequest = deferredQueue.shift();
             var deferredFunc = eval(nextRequest.callback);
             if (typeof(deferredFunc) === "function") deferredFunc(JSON.parse(nextRequest.data));
-            var requestUpdate = objectStore.put({domain: data.info.domain, requests: deferredQueue});
+            var requestUpdate = objectStore.put({domain: registration.scope, requests: deferredQueue});
           }
         }
       }
     };
   }
+
+  function addToCache(type, itemsToAdd, version) {
+    var cacheName = 'sky-' + type;
+    if (version) cacheName += '-v' + version;
+    caches.open(cacheName).then(function(cache) {
+      if (type === 'static') {
+        if (precache) caches.delete('sky-static');
+        precache = cache;
+        itemsToAdd.forEach(function(item, i) {
+          cache.match(item).then(function(response) {
+            if (!response) cache.add(item);
+          })
+        })
+        cleanCache(itemsToAdd);
+      }
+      else {
+        if (type === 'dynamic') postcache = cache;
+        if (type === 'fallback') fallback = cache;
+        cache.addAll(itemsToAdd).then(function() {
+        });
+      }
+    }).catch(function(err) {
+      console.log('error in addToCache', err);
+    });
+  }
+
+  function fetchFromCache(cacheName, request) {
+
+  }
+
+  function cleanCache(newItems) {
+    //  TODO: collect list of current keys in cache. check each key against
+    //  new cache array and remove from cache if not found
+    caches.keys().then(function(keylist) {
+      console.log('newItems', newItems);
+      keylist.filter(function(key) {
+        return /^sky-static/.test(key);
+      }).forEach(function(cacheName) {
+        console.log('cacheName', cacheName);
+        caches.open(cacheName).then(function(cache) {
+          console.log('cache', cache);
+          cache.keys().then(function(keylist) {
+            keylist.forEach(function(key) {
+              if (newItems.indexOf(key.url.replace(registration.scope, '')) < 0) {
+                cache.delete(key);
+                console.log('deleting from cache', key.url);
+              }
+            })
+          })
+        })
+      })
+    }).then(function() {
+      console.log('old cache items should have been deleted')
+    }).catch(function(err) { console.log('there was an error in cleanCache', err)});
+  }
 }
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 825d68fd7db363816d6ae1040ea823de5c8bc085
 /*
   The code below runs in the window scope
 */
 if (window) {
-<<<<<<< HEAD
-  console.log('index code is running', navigator.serviceWorker.controller);
-=======
 
->>>>>>> 825d68fd7db363816d6ae1040ea823de5c8bc085
   (function() {
     console.log('iife is running');
     //  Service Workers are not (yet) supported by all browsers
     if (!navigator.serviceWorker) return;
-<<<<<<< HEAD
-    //  A reference to our database in indexedDB
-    var db;
-
-    var serviceWorker = navigator.serviceWorker.controller;
-    console.log('here i am in index scope', window.location.origin, serviceWorker);
-    //  Register the service worker once on load
-    if (!serviceWorker) {
-      console.log('about to register a service worker');
-=======
 
     var serviceWorker = navigator.serviceWorker.controller;
 
     //  Register the service worker once on load
     if (!serviceWorker) {
-
->>>>>>> 825d68fd7db363816d6ae1040ea823de5c8bc085
-      navigator.serviceWorker.register('/sw-one.js', {
-        scope: '.'
-      }).then(function(registration) {
+      navigator.serviceWorker.register('/sw-one.js', {scope: '.'}).then(function(registration) {
         serviceWorker = registration.active || registration.waiting || registration.installing;
-<<<<<<< HEAD
-        console.log('i just registered a service worker :-P');
-=======
 
->>>>>>> 825d68fd7db363816d6ae1040ea823de5c8bc085
         //  This file should be included in the cache for offline use
-        skyport.cache(['/sw-one.js']);
-
-        //  Tell the service worker to create storage in indexedDB
-        sendToSW({command: 'createDB', info: {domain: window.location.origin}});
+        skyport.dynamic(['/sw-one.js']);
       });
     }
 
+    // Used to control caching order
+    var staticStatus = false;
+    var dynamicSatus = false;
+    var staticData;
+    var dynamicData;
+
     //  Make useful functions available on the window object
-<<<<<<< HEAD
-    console.log('im just above skyport declaration');
-=======
->>>>>>> 825d68fd7db363816d6ae1040ea823de5c8bc085
     window.skyport =  window.skyport || {
 
-      //  Use this function to add assets to cache for offline use
-      cache: function(assets, fallback) {
-        console.log('cache args',arguments.callee.caller);
-        if (!Array.isArray(assets)) assets = [assets];
-        sendToSW({
-          command: 'cache',
-          info: assets
-        });
-
-        if (fallback) {
-          sendToSW({
-            command: 'fallback',
-            info: fallback
-          });
+      cache: function(jsonFile) {
+        if (typeof jsonFile !== 'string' || !/\.json$/.test(jsonFile)) {
+          console.error('(SkyPort) Error: skyport.cache function parameter ' +
+            'must be a JSON file');
+          return;
         }
+        sendToSW({
+          command: 'cacheJSON',
+          info: {
+            cacheType: 'cache',
+            fileRoute: jsonFile,
+          }
+        });
+        return;
       },
 
-      //  Use this function to add a default page if a resource is not cached
-      fallback: function(fallback) {
-      	sendToSW({
-          command: 'fallback',
-          info: fallback
+      static: function(version, assets) {
+        console.log('cache was given', typeof(assets), assets);
+        if (typeof version === 'string' && /\.json$/.test(version)) {
+          sendToSW({
+            command: 'cacheJSON',
+            info: {
+              cacheType: 'static',
+              fileRoute: version,
+            }
+          });
+          return;
+        }
+
+        if (typeof version !== 'number' && typeof version !== 'string') {
+          console.error('(SkyPort) Error: skyport.static must receive a JSON ' +
+            'file or a version (number or string) as it\'s first argument');
+          return;
+        }
+
+        if (!Array.isArray(assets)) {
+          console.log('(SkyPort) Error: assets passed to skyport.static must ' +
+            'be either an array (after a version parameter) or a JSON file');
+          return;
+        }
+
+        sendToSW({
+          command: 'cacheArray',
+          info: {
+            cacheType: 'static',
+            version: version,
+            assets: assets,
+          }
         });
       },
 
       dynamic: function(assets) {
-      	sendToSW({
-          command: 'dynamic',
-          info: assets
+
+        //  Function was passed a JSON file
+        if (typeof assets === 'string' && /\.json$/.test(assets)) {
+          sendToSW({
+            command: 'cacheJSON',
+            info: {
+              cacheType: 'dynamic',
+              fileRoute: assets,
+            }
+          });
+          return;
+        }
+
+        //  Function should otherwise be passed an array
+        if (!Array.isArray(assets)) {
+          console.log('(SkyPort) Error: assets passed to skyport.dynamic must' +
+            ' be either an array or a JSON file. HINT: skyport.dynamic does ' +
+            'not take a version parameter');
+          return;
+        }
+
+        sendToSW({
+          command: 'cacheArray',
+          info: {
+            cacheType: 'dynamic',
+            assets: assets,
+          }
         });
       },
 
+      //  Use this function to add a default page if a resource is not cached
+      fallback: function(htmlFile) {
+        if (!htmlFile || typeof htmlFile !== 'string' || !/\.html$/.test(htmlFile)) {
+          console.log('(SkyPort) Error: parameter of fallback function must ' +
+            'be an HTML file');
+          return;
+        }
+      	sendToSW({
+          command: 'fallback',
+          info: { fileRoute: htmlFile }
+        });
+      },
+
+
       //
-      sendOrQueue: function(dataObj, deferredFunc) {
+      direct: function(dataObj, deferredFunc) {
         if (navigator.onLine) return deferredFunc(dataObj);
         if (typeof(deferredFunc) !== "function") return;
         sendToSW({
           command: 'queue',
           info: {
-            domain: window.location.origin,
             dataObj: JSON.stringify(dataObj),
             deferredFunc: '(' + deferredFunc.toString() + ')'
           }
         });
+      },
+
+      reset: function() {
+    		var args = Array.prototype.slice.call(arguments);
+
+    		if(args.length === 0) {
+    			resetCache();
+    			resetIndexedDB();
+    			resetSW();
+    		} else {
+    			args.forEach(function(arg) {
+    				if(arg.toLowerCase() === "cache") resetCache();
+    				else if(arg.toLowerCase() === "indexeddb")	resetIndexedDB();
+    				else if(arg.toLowerCase() === "sw") resetSW();
+    			});
+    		}
+
+    		function resetCache() {
+    			caches.keys().then(function(keylist) {
+    				return Promise.all(
+    					keylist.filter(function(cacheName) {
+    						return caches.delete(cacheName)
+    					})
+    				);
+    			}).then(function() {
+            console.log('(SkyPort) Success: SkyPort caches deleted');
+          });
+    		}
+
+    		function resetIndexedDB() {
+          var openRequest = indexedDB.open('skyport', 1);
+          openRequest.onsuccess = function(event) {
+            console.log('event.target.result', event.target.result);
+            var deleteReq = indexedDB.deleteDatabase(event.target.result);
+
+            deleteReq.onsuccess= function(e) {
+              console.log('(SkyPort) Success: SkyPort indexedDB deleted');
+              console.log(event.target.result)
+            };
+
+            deleteReq.onerror= function(e) {
+      				console.error();('(SkyPort) Error: SkyPort indexedDB not deleted');
+      			};
+          }
+    		}
+
+    		function resetSW() {
+    			navigator.serviceWorker.getRegistrations().then(function(registrations) {
+    				for (var registration in registrations) {
+              registrations[registration].unregister().then(function() {
+    						console.log('(SkyPort) Success: SkyPort service worker deleted');
+    					});
+    				}
+    			});
+    		}
       }
     };
 
-    window.addEventListener('online', function(event) {
-<<<<<<< HEAD
-      sendToSW({command: "online", info: true});
-      dequeue();
-      // sendToSW({
-      //   command: 'dequeue',
-      //   info: {
-      //     domain: window.location.origin
-      //   }
-      // });
-    });
 
-    window.addEventListener('offline', function(event) {
-      sendToSW({command: "online", info: false});
-=======
+    window.addEventListener('online', function(event) {
       dequeue();
     });
 
     window.addEventListener('offline', function(event) {
       //
->>>>>>> 825d68fd7db363816d6ae1040ea823de5c8bc085
     });
 
     window.addEventListener('load', function(event) {
+      console.log('window loaded')
     });
 
+
     function dequeue() {
-      var openRequest = indexedDB.open('DEFERRED', 1);
+      var openRequest = indexedDB.open('skyport', 1);
 
       openRequest.onsuccess = function(e) {
         var db = e.target.result;
-        var objectStore = db.transaction("deferredRequests", "readwrite").objectStore("deferredRequests");
-        var retrieveRequest = objectStore.get(window.location.origin);
+        var objectStore = db.transaction("redirected", "readwrite").objectStore("redirected");
+        var retrieveRequest = objectStore.get(window.location.origin + '/');
 
         retrieveRequest.onsuccess = function(event) {
+          console.log('retrieveRequest', retrieveRequest);
           var deferredQueue = retrieveRequest.result["requests"];
 
           while(navigator.onLine && deferredQueue.length) {
             var nextRequest = deferredQueue.shift();
             var deferredFunc = eval(nextRequest.callback);
             if (typeof(deferredFunc) === "function") deferredFunc(JSON.parse(nextRequest.data));
-            var requestUpdate = objectStore.put({domain: window.location.origin, requests: deferredQueue});
+            var requestUpdate = objectStore.put({
+              domain: window.location.origin + '/',
+              requests: deferredQueue
+            });
           }
         }
       }
     }
-<<<<<<< HEAD
-		
-	// FUNCTION FOR CLEARING ALL ITEMS IN EACH CHOICE:
-	// choose the data you want to reset out of 3: sw, cache, or indexdb.
-	function reset() {
-		// get all arguments entered into function
-		var args = Array.prototype.slice.call(arguments);
 
-		if(args.length === 0) { 
-			resetCache();
-			resetIndexedb();
-			resetSW();
-		}else if(args.length > 0) {
-			// loop through function, if particular argument exists then send
-			for(var i=0; i<args.length; i++) {
-				if(args[i] === "cache") { 
-					resetCache();
-				}else if(args[i] === "indexedb") { 
-					resetIndexedb();
-				}else if(args[i] === "sw") { 
-					resetSW();
-				} 
-			}
-		}
-
-		function resetCache() {
-			console.log("in reset-cache!");
-			caches.keys().then(function(cacheNames) {
-				return Promise.all(
-					cacheNames.filter(function(cacheName) {
-						return caches.delete(cacheName)
-					})
-				);
-			});
-		}
-
-		function resetIndexedb() {
-			var deleteReq = indexedDB.deleteDatabase('DEFERRED');
-
-			deleteReq.onsuccess= function(event) { 
-				console.log("Successfully deleted database!");
-				setTimeout(function() {
-					// setting false so it reloads from cache
-					// true from server
-					// this is not working, bug in chrome.
-					window.location.reload(false);
-				}, 1000);
-			};
-		}
-
-
-		function resetSW() {
-			navigator.serviceWorker.getRegistrations().then(function(registrations) {
-				console.log('IN SW!!!!')
-				for(var registration in registrations) {
-					var sw = registrations[registration];
-					sw.unregister().then(function(boolean) {
-						console.log("Deleted SW!");
-					});
-				}
-			});
-		}
-}
-
-
-//Examples:
-//		reset('indexedb'); 
-//		reset('cache');
-//		reset('sw'); // not working well anymore
-// reset('cache', 'indexedb');
-// reset('sw', cache', 'indexedb'); // not working well
-// reset()
-=======
->>>>>>> 825d68fd7db363816d6ae1040ea823de5c8bc085
+    var messageQueue = messageQueue || [];
 
     function sendToSW(messageObj) {
+      messageQueue.push(messageObj);
+
       if (!serviceWorker) {
         navigator.serviceWorker.oncontrollerchange = function() {
           serviceWorker = navigator.serviceWorker.controller;
-          serviceWorker.postMessage(messageObj);
+          sendQueue();
         }
       } else {
-        serviceWorker.postMessage(messageObj);
+        sendQueue();
+      }
+
+      function sendQueue() {
+        while (messageQueue.length) {
+          serviceWorker.postMessage(messageQueue.shift());
+        }
       }
     }
-  })();;
+  })();
 }

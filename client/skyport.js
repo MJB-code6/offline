@@ -72,6 +72,19 @@ otherwise they provide an argument it will only clear whatevr argument they prov
           deferredFunc: '(' + deferredFunc.toString() + ')'
         }
       });
+    },
+
+    //caching dynamic data
+    dynamic: function(assetsArray) {
+      var assetsObject = {};
+      for(var i = 0; i < assetsArray.length; i++) {
+        assetsArray[i] = window.location.origin + assetsArray[i];
+        assetsObject[assetsArray[i]] = 0;
+      }
+      sendToSW({
+        command: 'dynamic',
+        info: assetsObject
+      })
     }
   };
 

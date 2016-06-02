@@ -68,7 +68,29 @@
 =======
     </div>
     <script src='./sw-one.js'></script>
+<<<<<<< HEAD
 	  <script src='./app.js'></script>
 >>>>>>> 825d68fd7db363816d6ae1040ea823de5c8bc085
+=======
+    <!-- <script src='./app.js'></script> -->
+    <script>
+      // skyport.cache('/assets/myAssets.json');
+      skyport.static(3, [
+        "/",
+        "/index.html",
+        "/feature.html",
+        "/msgApp.js",
+        "/style.css",
+        "/assets/vid1.mp4",
+        // "/assets/vid3.mp4",
+        // "/assets/birdy1.jpg",
+        // "/assets/birdy2.gif",
+        "/assets/birdy3.gif",
+        "https://ajax.googleapis.com/ajax/libs/jquery/2.2.3/jquery.min.js",
+        "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css",
+      ]);
+      skyport.dynamic(["/messages"]);
+    </script>
+>>>>>>> bb6980d5cd032526ded1c1b78a42dd7d7eef5da3
   </body>
 </html>
