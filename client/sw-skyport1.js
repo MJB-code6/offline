@@ -1,8 +1,20 @@
+'use strict';
+/*function to reset indexDB, cache, and SW
+make it so if there are no arguments then it automatically clears all
+otherwise they provide an argument it will only clear whatevr argument they provide.
+
+1. clear cache
+2. clear index DB
+3. register new SW?
+4. clear all 3 if no arguments
+5. clear only item that is in arguments*/
+
 const CACHE_FIRST = 'precache';
 const FALLBACK_CACHE = 'fallback';
 var online = true;
 var db;
 var precacheAssets = precacheAssets || [];
+var registration;
 
 self.addEventListener('install', function(event) {
   return self.skipWaiting();
@@ -24,7 +36,6 @@ self.addEventListener('fetch', function(event) {
   });
 
 self.addEventListener('message', function(event) {
-
 	if (event.data.command === "cache") {
     precacheAssets = precacheAssets.concat(event.data.info);
     caches.open('precache')
@@ -89,5 +100,11 @@ self.addEventListener('message', function(event) {
       };
     }
   }
-
+/*
+	+ Find alternatives to eval() in the emptyQueue function that runs when the user is back online and needs to execute the function. 
+	+ Right now function is stringified, this is all done on Client-side. So someone can hijack.
+	+ There is a way to turn the function back into a function from a string onces its' sent over but the hijacking issue remains. 
+	+ Also can't use authentication.
+*/
+	
 });

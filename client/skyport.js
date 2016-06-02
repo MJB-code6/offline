@@ -1,4 +1,14 @@
 (function() {
+/*function to reset indexDB, cache, and SW
+make it so if there are no arguments then it automatically clears all
+otherwise they provide an argument it will only clear whatevr argument they provide.
+
+1. clear cache
+2. clear index DB
+3. register new SW?
+4. clear all 3 if no arguments
+5. clear only item that is in arguments*/
+	
   //  Service Workers are not (yet) supported by all browsers
   if (!navigator.serviceWorker) return;
 
@@ -19,6 +29,8 @@
 
       //  Tell the service worker to create storage in indexedDB
       sendToSW({command: 'createDB', info: window.location.origin});
+			
+			sendToSW({command: 'registration', info: registration});
     });
   }
 
@@ -76,6 +88,72 @@
     }
   };
 
+	
+//	// FUNCTION FOR CLEARING ALL ITEMS IN EACH CHOICE:
+//	// choose the data you want to reset out of 3: sw, cache, or indexdb + nameOfDB.
+//	function reset() {
+//  // get all arguments entered into function
+//  var args = Array.prototype.slice.call(arguments);
+//
+//  if(args.length === 0) { 
+//    return undefined;
+//  }else if(args.length > 0) {
+//   	// loop through function, if particular argument exists then send
+//    for(var i=0; i<args.length; i++) {
+//      if(args[i] === "cache") { 
+//      	resetCache();
+//      }else if(args[i] === "indexedb") { 
+//        resetIndexedb();
+//      }else if(args[i] === "sw") { 
+//        resetSW();
+//      } 
+//    }
+//  }
+//		
+//	function resetCache() {
+//		console.log("in reset-cache!");
+//		caches.keys().then(function(cacheNames) {
+//			return Promise.all(
+//				cacheNames.filter(function(cacheName) {
+//					return caches.delete(cacheName)
+//				})
+//			);
+//		});
+//	}
+//	
+//	function resetIndexedb() {
+//		var deleteReq = indexedDB.deleteDatabase('DEFERRED');
+//
+//		deleteReq.onsuccess= function(event) { 
+//			console.log("Successfully deleted database!");
+//			setTimeout(function() {
+//				// setting false so it reloads from cache
+//				// true from server
+//				// this is not working, bug in chrome.
+//				window.location.reload(false);
+//			}, 1000);
+//		};
+//	}
+//		
+//		
+//	function resetSW() {
+//		navigator.serviceWorker.getRegistrations().then(function(registrations) {
+//			for(var registration in registrations) {
+//				var sw = registrations[registration];
+//				sw.unregister().then(function(boolean) {
+//					console.log("Deleted SW!");
+//				});
+//			}
+//		});
+//	}
+//}
+//
+
+		Examples:
+//		reset('indexedb'); 
+//		reset('cache');
+//		reset('sw')
+	
   window.addEventListener('online', function(event) {
     sendToSW({command: "online", info: true});
     emptyQueue();
@@ -117,14 +195,15 @@
     };
   }
 
-  function sendToSW(messageObj) {
+  function sendToSW(messageObjOrArr) {
     if (!serviceWorker) {
       navigator.serviceWorker.oncontrollerchange = function() {
         serviceWorker = navigator.serviceWorker.controller;
-        serviceWorker.postMessage(messageObj);
+        serviceWorker.postMessage(messageObjOrArr);
       }
     } else {
-      serviceWorker.postMessage(messageObj);
+      serviceWorker.postMessage(messageObjOrArr);
     }
   }
+	
 })();
