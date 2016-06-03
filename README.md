@@ -215,4 +215,4 @@ skyport.reset('sw') // deletes current Service Worker
 ### License
 MIT License (MIT)
 
-Copyright (c) Team SkyPort (Brandon, Masha, Joe)
+Copyright (c) 2016 Team SkyPort ([Brandon](https://github.com/ranmizu), [Masha](https://github.com/Mashadim), [Joe](https://github.com/ZhouxiangHuang))
