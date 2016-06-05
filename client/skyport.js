@@ -59,6 +59,7 @@ if (!window) {
               if (response) return response;
               else if (/\.html$/.test(event.request.url)) {
                 //if no match found from dynamic, serve the fallback page
+                console.log(fallbackURL);
                 return fallback.match(fallbackURL).then(function(response) {
                   return response;
                 })
@@ -67,7 +68,7 @@ if (!window) {
                 console.error('(SkyPort) Error: a resource ', event.request.url,
                   ' was not found in cache');
               }
-            })
+            }).catch(function(e) { console.log('loc a', e)});
         }
       })
     )
@@ -114,8 +115,10 @@ if (!window) {
           }
 
           if (parsedFile.fallback) {
-            fallbackURL += parsedFile.fallback.slice(parsedFile.fallback.indexOf(
-              parsedFile.fallback.match(/\w/)));
+            if (!/\.html$/.test(fallbackURL)) {
+              fallbackURL += parsedFile.fallback.slice(parsedFile.fallback.indexOf(
+                parsedFile.fallback.match(/\w/)));
+            }
             addToCache('fallback', [parsedFile.fallback]);
           }
         }
@@ -241,7 +244,7 @@ if (!window) {
             if (!response) cache.add(item);
           })
         })
-        cleanCache(itemsToAdd);
+        //cleanCache(itemsToAdd);
       }
       else {
         if (type === 'dynamic') postcache = cache;
@@ -296,12 +299,6 @@ if (window) {
         skyport.dynamic(['/skyport.js']);
       });
     }
-
-    // Used to control caching order
-    var staticStatus = false;
-    var dynamicSatus = false;
-    var staticData;
-    var dynamicData;
 
     //  Make useful functions available on the window object
     window.skyport =  window.skyport || {
