@@ -3,7 +3,9 @@ var window;
   The code below runs in the service worker global scope
 */
 if (!window) {
-  //three variables bellow are declared for accessing caches
+  console.log('registration scope',registration.scope);
+  console.log('swgs', this);
+
   var precache = precache || caches.open('sky-static').then(function(cache) {
     return cache;
   });
@@ -19,62 +21,52 @@ if (!window) {
   var cacheOpen;
   var fallbackURL = registration.scope;
 
-  //skipWaiting within install listenner allows waiting service worker become active
   self.addEventListener('install', function(event) {
+    console.log('sw installing');
+    console.log(new Date(Date.now()));
     return self.skipWaiting();
   });
 
-  //runIDB runs initially in the listenner to create objectstore in indexedDB
   self.addEventListener('activate', function(event) {
     runIDB();
     event.waitUntil(self.clients.claim());
   });
 
-  //within the fetch listener is the caching system that controls the interaction
-  //between client and server
   self.addEventListener('fetch', function(event) {
     event.respondWith(
       precache.match(event.request).then(function(response) {
         if(response) {
-          //if requested data is found in static cache, serve the asset to the client
           return response;
         } else if (navigator.onLine) {
-          //if requested data is not found in static cache AND there is network connection
-          //request data from the server
-          return fetch(event.request).then(function(netRes) {
-              //looks for dynamic cache to check wether data is considered dynamic
+          return fetch(event.request/*.clone()*/).then(function(netRes) {
               return postcache.match(event.request).then(function(response) {
-                //if the request is dynamic data, update cache
                 if (response && event.request.method === 'GET') {
-                  postcache.put(event.request, netRes.clone());
+                  postcache.put(event.request, netRes)
                 }
-                //send response from the network to the client
                 return netRes;
-              })
-          })
+              }).catch(function(err) {console.log('postcache match error', err)})
+          }).catch(function(err) {console.log('server match error', err)})
         } else {
-            //if there is no network connection AND requested data is not
-            //found in static cache, serve data from dynamic cache
             return postcache.match(event.request).then(function(response) {
               if (response) return response;
               else if (/\.html$/.test(event.request.url)) {
-                //if no match found from dynamic, serve the fallback page
+                console.log('fburl', fallbackURL);
                 return fallback.match(fallbackURL).then(function(response) {
                   return response;
-                })
+                }).catch(function(err) {console.log('fallback match error', err)})
               }
               else {
-                console.error('(SkyPort) Error: a resource ', event.request.url,
+                console.log('(SkyPort) Error: a resource ', event.request.url,
                   ' was not found in cache');
               }
-            })
+            }).catch(function(err) { console.log('caught after postcache match', err)});
         }
       })
     )
   });
 
-
   self.addEventListener('message', function(event) {
+    console.log('heard a message', event.data, 'at', Date.now());
     var command = event.data.command;
     var info = event.data.info;
 
@@ -83,6 +75,8 @@ if (!window) {
         return response.json()
       })
       .then(function(parsedFile) {
+        console.log('parsedFile', parsedFile);
+        console.log('info', info);
         if (info.cacheType === 'cache') {
 
           if (!parsedFile.static && !parsedFile.dynamic && !parsedFile.fallback) {
@@ -249,6 +243,8 @@ if (!window) {
         cache.addAll(itemsToAdd).then(function() {
         });
       }
+    }).catch(function(err) {
+      console.log('error in addToCache', err);
     });
   }
 
@@ -257,21 +253,29 @@ if (!window) {
   }
 
   function cleanCache(newItems) {
+    //  TODO: collect list of current keys in cache. check each key against
+    //  new cache array and remove from cache if not found
     caches.keys().then(function(keylist) {
+      console.log('newItems', newItems);
       keylist.filter(function(key) {
         return /^sky-static/.test(key);
       }).forEach(function(cacheName) {
+        console.log('cacheName', cacheName);
         caches.open(cacheName).then(function(cache) {
+          console.log('cache', cache);
           cache.keys().then(function(keylist) {
             keylist.forEach(function(key) {
               if (newItems.indexOf(key.url.replace(registration.scope, '')) < 0) {
                 cache.delete(key);
-              }
+                console.log('deleting from cache', key.url);
+              }              
             })
           })
         })
       })
-    })
+    }).then(function() {
+      console.log('old cache items should have been deleted')
+    }).catch(function(err) { console.log('there was an error in cleanCache', err)});
   }
 }
 
@@ -282,6 +286,7 @@ if (!window) {
 if (window) {
 
   (function() {
+    console.log('iife is running');
     //  Service Workers are not (yet) supported by all browsers
     if (!navigator.serviceWorker) return;
 
@@ -296,12 +301,6 @@ if (window) {
         skyport.dynamic(['/sw-one.js']);
       });
     }
-
-    // Used to control caching order
-    var staticStatus = false;
-    var dynamicSatus = false;
-    var staticData;
-    var dynamicData;
 
     //  Make useful functions available on the window object
     window.skyport =  window.skyport || {
@@ -323,6 +322,7 @@ if (window) {
       },
 
       static: function(version, assets) {
+        console.log('cache was given', typeof(assets), assets);
         if (typeof version === 'string' && /\.json$/.test(version)) {
           sendToSW({
             command: 'cacheJSON',
@@ -341,7 +341,7 @@ if (window) {
         }
 
         if (!Array.isArray(assets)) {
-          console.error('(SkyPort) Error: assets passed to skyport.static must ' +
+          console.log('(SkyPort) Error: assets passed to skyport.static must ' +
             'be either an array (after a version parameter) or a JSON file');
           return;
         }
@@ -372,7 +372,7 @@ if (window) {
 
         //  Function should otherwise be passed an array
         if (!Array.isArray(assets)) {
-          console.error('(SkyPort) Error: assets passed to skyport.dynamic must' +
+          console.log('(SkyPort) Error: assets passed to skyport.dynamic must' +
             ' be either an array or a JSON file. HINT: skyport.dynamic does ' +
             'not take a version parameter');
           return;
@@ -390,7 +390,7 @@ if (window) {
       //  Use this function to add a default page if a resource is not cached
       fallback: function(htmlFile) {
         if (!htmlFile || typeof htmlFile !== 'string' || !/\.html$/.test(htmlFile)) {
-          console.error('(SkyPort) Error: parameter of fallback function must ' +
+          console.log('(SkyPort) Error: parameter of fallback function must ' +
             'be an HTML file');
           return;
         }
@@ -444,14 +444,16 @@ if (window) {
     		function resetIndexedDB() {
           var openRequest = indexedDB.open('skyport', 1);
           openRequest.onsuccess = function(event) {
+            console.log('event.target.result', event.target.result);
             var deleteReq = indexedDB.deleteDatabase(event.target.result);
 
             deleteReq.onsuccess= function(e) {
               console.log('(SkyPort) Success: SkyPort indexedDB deleted');
+              console.log(event.target.result)
             };
 
             deleteReq.onerror= function(e) {
-      				console.error('(SkyPort) Error: SkyPort indexedDB not deleted');
+      				console.error();('(SkyPort) Error: SkyPort indexedDB not deleted');
       			};
           }
     		}
@@ -468,16 +470,17 @@ if (window) {
       }
     };
 
-
     window.addEventListener('online', function(event) {
       dequeue();
     });
 
-
-    window.addEventListener('load', function(event) {
+    window.addEventListener('offline', function(event) {
       //
     });
 
+    window.addEventListener('load', function(event) {
+      console.log('window loaded')
+    });
 
     function dequeue() {
       var openRequest = indexedDB.open('skyport', 1);
@@ -488,6 +491,7 @@ if (window) {
         var retrieveRequest = objectStore.get(window.location.origin + '/');
 
         retrieveRequest.onsuccess = function(event) {
+          console.log('retrieveRequest', retrieveRequest);
           var deferredQueue = retrieveRequest.result["requests"];
 
           while(navigator.onLine && deferredQueue.length) {
@@ -523,5 +527,5 @@ if (window) {
         }
       }
     }
-  })();
+  })();;
 }
