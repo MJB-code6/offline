@@ -3,7 +3,7 @@ var window;
   The code below runs in the service worker global scope
 */
 if (!window) {
-
+  //three variables bellow are declared for accessing caches
   var precache = precache || caches.open('sky-static').then(function(cache) {
     return cache;
   });
@@ -19,42 +19,55 @@ if (!window) {
   var cacheOpen;
   var fallbackURL = registration.scope;
 
+  //skipWaiting within install listenner allows waiting service worker become active
   self.addEventListener('install', function(event) {
     return self.skipWaiting();
   });
 
+  //runIDB runs initially in the listenner to create objectstore in indexedDB
   self.addEventListener('activate', function(event) {
     runIDB();
     event.waitUntil(self.clients.claim());
   });
 
+  //within the fetch listener is the caching system that controls the interaction
+  //between client and server
   self.addEventListener('fetch', function(event) {
     event.respondWith(
       precache.match(event.request).then(function(response) {
         if(response) {
+          //if requested data is found in static cache, serve the asset to the client
           return response;
         } else if (navigator.onLine) {
-          return fetch(event.request/*.clone()*/).then(function(netRes) {
+          //if requested data is not found in static cache AND there is network connection
+          //request data from the server
+          return fetch(event.request).then(function(netRes) {
+              //looks for dynamic cache to check wether data is considered dynamic
               return postcache.match(event.request).then(function(response) {
+                //if the request is dynamic data, update cache
                 if (response && event.request.method === 'GET') {
-                  postcache.put(event.request, netRes)
+                  postcache.put(event.request, netRes.clone())
                 }
+                //send response from the network to the client
                 return netRes;
-              }).catch(function(err) {console.log('postcache match error', err)})
-          }).catch(function(err) {console.log('server match error', err)})
+              })
+          })
         } else {
+            //if there is no network connection AND requested data is not
+            //found in static cache, serve data from dynamic cache
             return postcache.match(event.request).then(function(response) {
               if (response) return response;
               else if (/\.html$/.test(event.request.url)) {
+                //if no match found from dynamic, serve the fallback page
                 return fallback.match(fallbackURL).then(function(response) {
                   return response;
-                }).catch(function(err) {console.log('fallback match error', err)})
+                })
               }
               else {
-                console.log('(SkyPort) Error: a resource ', event.request.url,
+                console.error('(SkyPort) Error: a resource ', event.request.url,
                   ' was not found in cache');
               }
-            }).catch(function(err) { console.log('caught after postcache match', err)});
+            })
         }
       })
     )
@@ -236,8 +249,6 @@ if (!window) {
         cache.addAll(itemsToAdd).then(function() {
         });
       }
-    }).catch(function(err) {
-      console.log('error in addToCache', err);
     });
   }
 
@@ -312,7 +323,6 @@ if (window) {
       },
 
       static: function(version, assets) {
-        console.log('cache was given', typeof(assets), assets);
         if (typeof version === 'string' && /\.json$/.test(version)) {
           sendToSW({
             command: 'cacheJSON',
@@ -331,7 +341,7 @@ if (window) {
         }
 
         if (!Array.isArray(assets)) {
-          console.log('(SkyPort) Error: assets passed to skyport.static must ' +
+          console.error('(SkyPort) Error: assets passed to skyport.static must ' +
             'be either an array (after a version parameter) or a JSON file');
           return;
         }
@@ -362,7 +372,7 @@ if (window) {
 
         //  Function should otherwise be passed an array
         if (!Array.isArray(assets)) {
-          console.log('(SkyPort) Error: assets passed to skyport.dynamic must' +
+          console.error('(SkyPort) Error: assets passed to skyport.dynamic must' +
             ' be either an array or a JSON file. HINT: skyport.dynamic does ' +
             'not take a version parameter');
           return;
@@ -380,7 +390,7 @@ if (window) {
       //  Use this function to add a default page if a resource is not cached
       fallback: function(htmlFile) {
         if (!htmlFile || typeof htmlFile !== 'string' || !/\.html$/.test(htmlFile)) {
-          console.log('(SkyPort) Error: parameter of fallback function must ' +
+          console.error('(SkyPort) Error: parameter of fallback function must ' +
             'be an HTML file');
           return;
         }
@@ -434,16 +444,14 @@ if (window) {
     		function resetIndexedDB() {
           var openRequest = indexedDB.open('skyport', 1);
           openRequest.onsuccess = function(event) {
-            console.log('event.target.result', event.target.result);
             var deleteReq = indexedDB.deleteDatabase(event.target.result);
 
             deleteReq.onsuccess= function(e) {
               console.log('(SkyPort) Success: SkyPort indexedDB deleted');
-              console.log(event.target.result)
             };
 
             deleteReq.onerror= function(e) {
-      				console.error();('(SkyPort) Error: SkyPort indexedDB not deleted');
+      				console.error('(SkyPort) Error: SkyPort indexedDB not deleted');
       			};
           }
     		}
@@ -465,12 +473,9 @@ if (window) {
       dequeue();
     });
 
-    window.addEventListener('offline', function(event) {
-      //
-    });
 
     window.addEventListener('load', function(event) {
-      console.log('window loaded')
+      //
     });
 
 
@@ -483,7 +488,6 @@ if (window) {
         var retrieveRequest = objectStore.get(window.location.origin + '/');
 
         retrieveRequest.onsuccess = function(event) {
-          console.log('retrieveRequest', retrieveRequest);
           var deferredQueue = retrieveRequest.result["requests"];
 
           while(navigator.onLine && deferredQueue.length) {
@@ -519,5 +523,5 @@ if (window) {
         }
       }
     }
-  })();
+  })();;
 }
