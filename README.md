@@ -1,17 +1,17 @@
-# SkyPort
+# SkyPort.js
 > Simple setup. Offline-first. Customizable.
 
-### Why SkyPort?  
+### Why SkyPort.js?  
 
 * Create an offline-first user experience for your web apps.
 * Optimize online web performance by reducing network requests.
 * Progressive web functionality.
 
-SkyPort is a library designed to make it easier for developers to take full advantage of a powerful progressive web technology—Service Workers. As a proxy server that exists between the client and network, Service Workers have the potential to optimize web apps by reducing network requests, creating an offline-first experience so users can navigate your app even when they are offline, and even improve current online user experience.
+SkyPort.js is a library designed to make it easier for developers to take full advantage of a powerful progressive web technology—Service Workers. As a proxy server that exists between the client and network, Service Workers have the potential to optimize web apps by reducing network requests, creating an offline-first experience so users can navigate your app even when they are offline, and even improve current online user experience.
 
 #####So what's the problem with Service Workers?
 
-Service Workers are still a new and experimental technology, setup is long and tedious and understanding the Service Worker lifecycle can create a strenuous development experience. SkyPort is a library that simplifies setup, and provides developers flexibility and customization of their offline-first user experience.
+Service Workers are still a new and experimental technology, setup is long and tedious and understanding the Service Worker lifecycle can create a strenuous development experience. SkyPort.js is a library that simplifies setup, and provides developers flexibility and customization of their offline-first user experience.
 
 # Getting Started
 
@@ -215,4 +215,4 @@ skyport.reset('sw') // deletes current Service Worker
 ### License
 MIT License (MIT)
 
-Copyright (c) 2016 Team SkyPort ([Brandon](https://github.com/ranmizu), [Masha](https://github.com/Mashadim), [Joe](https://github.com/ZhouxiangHuang))
+Copyright (c) 2016 Team SkyPort.js ([Brandon](https://github.com/ranmizu), [Masha](https://github.com/Mashadim), [Joe](https://github.com/ZhouxiangHuang))
