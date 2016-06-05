@@ -5,7 +5,9 @@
 }
 
 body {
-  background: #44A0DD;
+	background: #4CA1AF; /* fallback for old browsers */
+	background: -webkit-linear-gradient(to left, #4CA1AF , #C4E0E5); /* Chrome 10-25, Safari 5.1-6 */
+	background: linear-gradient(to left, #4CA1AF , #C4E0E5); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */              
 }
 
 .lead {
@@ -13,12 +15,20 @@ body {
 }
 
 .jumbotron {
-	margin-top: 30px !important;
+	margin-top: 30px;
+	padding-bottom: -12px;
 	background: white;
+	width: 50%;
+	border-radius: 3px !important;
 }
 
 h1, h2 {
   text-align: center;
+}
+
+h1 {
+	font-weight:100;
+	margin-top: -15px;
 }
 
 h2 {
@@ -29,7 +39,6 @@ h2 {
   position: relative;
   width: 400px;
   background-color: #eee;
-  margin-bottom: 3em;
 }
 
 video {
@@ -55,15 +64,32 @@ video {
 
 #btnComment {
   position: absolute;
-  bottom: 0;
+  bottom: 3;
   right: 0;
   padding: 0 3px;
   line-height: 1.5;
 }
 
-#front-btn {
-	padding: 10px !important;
+.btn-font {
+	font-size: 1.2em;
+	font-weight: 200;
+	font-family:sans-serif;
 }
+
+.front-btn {
+	padding: 10px !important;
+	width: 80%;
+	margin-top: 3px !important;
+	margin-bottom: 3px !important;
+	border: 1px solid #4CA1AF;
+	color: #4CA1AF;
+}
+
+.front-btn:hover {
+	color: white;
+	background-color: #A4CFD7;
+}
+
 
 ul {
   list-style-type: none;
@@ -80,3 +106,55 @@ ul {
 	width: 400px; 
 }
 
+.footer-font {
+	font-size: 12px !important;
+	color: grey;
+}
+
+.input-box {
+	width: 89%;
+	border: 1px solid #4CA1AF;
+	border-radius: 6px;
+	font-size: 1.2em;
+	font-weight: 100;
+	font-family:sans-serif;
+}
+
+.input-btn {
+	border: 1px solid #A4CFD7;
+	color: #4CA1AF;
+	font-weight: 100;
+	font-family: sans-serif;
+}
+
+.input-btn:focus {
+	background-color: #A4CFD7  !important;
+	border: 1px solid #A4CFD7 !important;
+	color: white !important;
+}
+
+.input-btn:hover {
+	background-color: #A4CFD7  !important;
+	border: 1px solid #4CA1AF;
+	color: white;
+}
+
+.search:link {
+  text-decoration: none;
+	color: #4CA1AF;
+}
+
+.search:visited {
+    text-decoration: none;
+		color: #4CA1AF;
+}
+
+.search:hover {
+    text-decoration: none;
+		color: white;
+}
+
+.search:active {
+    text-decoration: none;
+		color: white;
+}

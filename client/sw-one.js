@@ -51,7 +51,7 @@ if (!window) {
               return postcache.match(event.request).then(function(response) {
                 //if the request is dynamic data, update cache
                 if (response && event.request.method === 'GET') {
-                  postcache.put(event.request, netRes)
+                  postcache.put(event.request, netRes.clone());
                 }
                 //send response from the network to the client
                 return netRes;
@@ -561,5 +561,5 @@ if (window) {
         }
       }
     }
-  })();;
+  })();
 }
