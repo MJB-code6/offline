@@ -41,7 +41,7 @@ if (!window) {
           return fetch(event.request/*.clone()*/).then(function(netRes) {
               return postcache.match(event.request).then(function(response) {
                 if (response && event.request.method === 'GET') {
-                  postcache.put(event.request, netRes)
+                  postcache.put(event.request, netRes.clone());
                 }
                 return netRes;
               }).catch(function(err) {console.log('postcache match error', err)})

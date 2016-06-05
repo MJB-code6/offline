@@ -9,88 +9,48 @@
     <meta name="author" content="">
     <link rel="icon" href="../../favicon.ico">
 
-    <title>SkyPort Example Page</title>
+    <title>CalmVids</title>
 
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 		<link rel="stylesheet" type="text/css" href="style.css">
   </head>
 
   <body>
-
     <div class="container">
       <div class="jumbotron">
-        <h1 style="color: #44A0DD">SkyPort</h1>
+        <h1 style="color: #4CA1AF">CalmVids</h1>
 				<div class="to-center">
-					<video width="" height="240" controls>
-						<source src="./assets/vid1.mp4" type="video/mp4">
-					</video>
+					<img src="/assets/calm.gif" class="img-responsive img-circle to-center">
 				</div>
         <p class="lead">
 					<ul>
-						<li class="lead text-center" style="color: grey"> Simple setup. Offline-first. Customizable. </li>
+						<li class="lead text-center" style="color: grey"> Relax at your own pace. </li>
 					</ul>
 				</p>
+				<div class="input-group input-group-lg text-center input-box">
+						<input type="text" class="form-control" placeholder="">
+						<span class="input-group-btn">
+							<button class="btn btn-default input-btn" type="button"><a href="/stars.html" class="search">Search</a></button>
+      			</span>
+    		</div>
         <p class="to-center">
-					<a class="btn btn-lg btn-success text-center to-center front-btn" href="./feature.html" role="button">Feature Video</a><br />
 					<!--use to show that the fallback page works on every type of link, or if asset is not in cache -->
-					<a class="btn btn-lg btn-success text-center to-center" href="./three.html" role="button">Another Page</a>
+					<a class="btn btn-lg text-center to-center front-btn" href="./feature.html" role="button"><span class="btn-font">Featured Videos</span></a>
+					
 				</p>
+			
+			  <footer class="footer">
+        	<p class="text-center footer-font">&copy; Powered By SkyPort.js</p>
+      	</footer>
       </div>
 
-      <div class="row">
-        <div class="col-lg-4 box">
-          <h2>Offline First.<br />Improve Performance.</h2>
-					<p class="text-center lead">Serve files from a cache, server, or fallback page, depending on if user is online or offline. </p>
-					<img src="/assets/birdy1.jpg" class="img-responsive img-circle to-center">
-        </div>
-        <div class="col-lg-4 box">
-          <h2>Easy Setup,<br />few lines of code.</h2>
-          <p class="text-center lead">A simple library that allows developers to focus less on setup and more on development. In only of a few lines of code developers can transform an online-only user experience into an offline-first web app.
-					</p>
-					<img src="/assets/birdy2.gif" class="img-responsive img-circle to-center">
-        </div>
-        <div class="col-lg-4 box">
-          <h2>Send Requests<br />when Offline.</h2>
-          <p class="text-center lead">Defer functions/requests if user offline, only to be successfully synced once they are online again.</p>
-					<div><img src="/assets/birdy3.gif" class="img-responsive img-circle to-center"></div>
-        </div>
-      </div>
 
-      <!-- Site footer -->
-      <footer class="footer">
-        <p class="text-center">&copy; MJB TEAM</p>
-      </footer>
 
-<<<<<<< HEAD
-    </div> <!-- /container -->
+    </div>s
     <script src='./sw-one.js'></script>
-	<script src='./app.js'></script>
-=======
-    </div>
-    <script src='./sw-one.js'></script>
-<<<<<<< HEAD
-	  <script src='./app.js'></script>
->>>>>>> 825d68fd7db363816d6ae1040ea823de5c8bc085
-=======
     <!-- <script src='./app.js'></script> -->
     <script>
-      // skyport.cache('/assets/myAssets.json');
-      skyport.static(3, [
-        "/",
-        "/index.html",
-        "/feature.html",
-        "/msgApp.js",
-        "/style.css",
-        "/assets/vid1.mp4",
-        // "/assets/vid3.mp4",
-        // "/assets/birdy1.jpg",
-        // "/assets/birdy2.gif",
-        "/assets/birdy3.gif",
-        "https://ajax.googleapis.com/ajax/libs/jquery/2.2.3/jquery.min.js",
-        "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css",
-      ]);
-      skyport.dynamic(["/messages"]);
+       skyport.cache('/assets/myAssets.json');
     </script>
->>>>>>> bb6980d5cd032526ded1c1b78a42dd7d7eef5da3
   </body>
 </html>
