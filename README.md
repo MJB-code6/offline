@@ -40,7 +40,7 @@ skyport.cache('/assetList.json');
 
  *assetList.json:*  
  
- + In this example, the static cache, the dynamic cache and the fallback page are all included in the JSON file—include only what you are using. **For example if you are only static assets, include the version number and the static property with the list of assets you want to store in the static cache.
+ + In this example, the static cache, the dynamic cache and the fallback page are all included in the JSON file—include only what you are using. **For example is you're only using static assets, include the version number and the static property with the list of assets you want to store in the static property.
  
 ```javascript
 {
