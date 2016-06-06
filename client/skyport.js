@@ -59,7 +59,10 @@ if (!window) {
               if (response) return response;
               else if (/\.html$/.test(event.request.url)) {
                 //if no match found from dynamic, serve the fallback page
+<<<<<<< HEAD
+=======
                 console.log(fallbackURL);
+>>>>>>> 13d9c88e959c279e0907f47e0f9af0a959cf894e
                 return fallback.match(fallbackURL).then(function(response) {
                   return response;
                 })
@@ -68,7 +71,11 @@ if (!window) {
                 console.error('(SkyPort) Error: a resource ', event.request.url,
                   ' was not found in cache');
               }
+<<<<<<< HEAD
+            })
+=======
             }).catch(function(e) { console.log('loc a', e)});
+>>>>>>> 13d9c88e959c279e0907f47e0f9af0a959cf894e
         }
       })
     )
@@ -115,10 +122,15 @@ if (!window) {
           }
 
           if (parsedFile.fallback) {
+<<<<<<< HEAD
+            fallbackURL += parsedFile.fallback.slice(parsedFile.fallback.indexOf(
+              parsedFile.fallback.match(/\w/)));
+=======
             if (!/\.html$/.test(fallbackURL)) {
               fallbackURL += parsedFile.fallback.slice(parsedFile.fallback.indexOf(
                 parsedFile.fallback.match(/\w/)));
             }
+>>>>>>> 13d9c88e959c279e0907f47e0f9af0a959cf894e
             addToCache('fallback', [parsedFile.fallback]);
           }
         }
@@ -244,7 +256,11 @@ if (!window) {
             if (!response) cache.add(item);
           })
         })
+<<<<<<< HEAD
+        cleanCache(itemsToAdd);
+=======
         //cleanCache(itemsToAdd);
+>>>>>>> 13d9c88e959c279e0907f47e0f9af0a959cf894e
       }
       else {
         if (type === 'dynamic') postcache = cache;
@@ -277,6 +293,7 @@ if (!window) {
     })
   }
 }
+<<<<<<< HEAD
 
 
 /*
@@ -288,6 +305,19 @@ if (window) {
     //  Service Workers are not (yet) supported by all browsers
     if (!navigator.serviceWorker) return;
 
+=======
+
+
+/*
+  The code below runs in the window scope
+*/
+if (window) {
+
+  (function() {
+    //  Service Workers are not (yet) supported by all browsers
+    if (!navigator.serviceWorker) return;
+
+>>>>>>> 13d9c88e959c279e0907f47e0f9af0a959cf894e
     var serviceWorker = navigator.serviceWorker.controller;
 
     //  Register the service worker once on load
@@ -299,10 +329,23 @@ if (window) {
         skyport.dynamic(['/skyport.js']);
       });
     }
+<<<<<<< HEAD
+
+    // Used to control caching order
+    var staticStatus = false;
+    var dynamicSatus = false;
+    var staticData;
+    var dynamicData;
 
     //  Make useful functions available on the window object
     window.skyport =  window.skyport || {
 
+=======
+
+    //  Make useful functions available on the window object
+    window.skyport =  window.skyport || {
+
+>>>>>>> 13d9c88e959c279e0907f47e0f9af0a959cf894e
       cache: function(jsonFile) {
         if (typeof jsonFile !== 'string' || !/\.json$/.test(jsonFile)) {
           console.error('(SkyPort) Error: skyport.cache function parameter ' +
@@ -520,5 +563,9 @@ if (window) {
         }
       }
     }
+<<<<<<< HEAD
+  })();;
+=======
   })();
+>>>>>>> 13d9c88e959c279e0907f47e0f9af0a959cf894e
 }

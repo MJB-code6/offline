@@ -18,7 +18,7 @@ body {
 	margin-top: 30px;
 	padding-bottom: -12px;
 	background: white;
-	width: 50%;
+	width: 80%;
 	border-radius: 3px !important;
 }
 
@@ -112,7 +112,7 @@ ul {
 }
 
 .input-box {
-	width: 89%;
+	width: 51%;
 	border: 1px solid #4CA1AF;
 	border-radius: 6px;
 	font-size: 1.2em;
@@ -137,6 +137,10 @@ ul {
 	background-color: #A4CFD7  !important;
 	border: 1px solid #4CA1AF;
 	color: white;
+}
+
+.search {
+	padding: 0.75em;
 }
 
 .search:link {
